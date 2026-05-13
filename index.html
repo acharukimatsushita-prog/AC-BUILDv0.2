@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AC-BUILDE</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" id="backButton" type="button" aria-label="戻る" title="戻る">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div>
+        <p class="eyebrow">Assembly Standard Viewer</p>
+        <h1>AC-BUILDE</h1>
+      </div>
+      <button class="icon-button" id="fullscreenButton" type="button" aria-label="全画面" title="全画面">
+        <span aria-hidden="true">⛶</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="view is-active" id="deviceView" aria-labelledby="deviceTitle">
+        <div class="toolbar">
+          <div>
+            <h2 id="deviceTitle">装置選択</h2>
+            <p>Google Driveで管理している組立標準を選択します。</p>
+          </div>
+          <button class="primary-button" id="openImportButton" type="button">取り込み</button>
+        </div>
+
+        <label class="search-box">
+          <span>検索</span>
+          <input id="searchInput" type="search" placeholder="装置名で検索">
+        </label>
+
+        <div class="device-grid" id="deviceGrid"></div>
+      </section>
+
+      <section class="view" id="slideView" aria-labelledby="slideDeviceName">
+        <div class="slide-head">
+          <div>
+            <p class="eyebrow" id="slideSource"></p>
+            <h2 id="slideDeviceName"></h2>
+          </div>
+          <div class="step-counter" id="stepCounter"></div>
+        </div>
+
+        <div class="slide-stage">
+          <button class="nav-hit nav-prev" id="prevButton" type="button" aria-label="前の工程">‹</button>
+          <figure class="step-card">
+            <img id="stepImage" alt="">
+            <figcaption>
+              <strong id="stepTitle"></strong>
+              <span id="stepMemo"></span>
+            </figcaption>
+          </figure>
+          <button class="nav-hit nav-next" id="nextButton" type="button" aria-label="次の工程">›</button>
+        </div>
+
+        <div class="bottom-controls">
+          <button id="prevControl" type="button">前へ</button>
+          <input id="stepSlider" type="range" min="0" max="0" value="0">
+          <button id="nextControl" type="button">次へ</button>
+        </div>
+      </section>
+
+      <section class="view" id="importView" aria-labelledby="importTitle">
+        <div class="toolbar">
+          <div>
+            <h2 id="importTitle">取り込み</h2>
+            <p>ExcelまたはPDFをGoogle Driveへ置き、AC-BUILDE用のスライドへ変換します。</p>
+          </div>
+        </div>
+
+        <div class="import-layout">
+          <form class="import-panel">
+            <label>
+              <span>装置名</span>
+              <input type="text" value="Vベルト巻込まれ安全体感装置">
+            </label>
+            <label>
+              <span>元ファイル</span>
+              <input type="file" accept=".pdf,.xlsx,.xls">
+            </label>
+            <label>
+              <span>自動分割方法</span>
+              <select>
+                <option>工程番号・見出しを優先</option>
+                <option>ページ単位</option>
+                <option>余白と罫線で分割</option>
+              </select>
+            </label>
+            <button class="primary-button" type="button" id="simulateImportButton">分割プレビュー作成</button>
+          </form>
+
+          <div class="preview-panel" id="importPreview">
+            <h3>分割候補</h3>
+            <div class="preview-list">
+              <article>
+                <span>01</span>
+                <strong>フレーム準備</strong>
+                <small>見出し候補から検出</small>
+              </article>
+              <article>
+                <span>02</span>
+                <strong>キャスター取付</strong>
+                <small>工程番号候補から検出</small>
+              </article>
+              <article>
+                <span>03</span>
+                <strong>ベアリング組付け</strong>
+                <small>空白境界から検出</small>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
