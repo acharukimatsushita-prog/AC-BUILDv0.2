@@ -132,6 +132,9 @@ const searchInput = document.querySelector("#searchInput");
 const backButton = document.querySelector("#backButton");
 const fullscreenButton = document.querySelector("#fullscreenButton");
 const openImportButton = document.querySelector("#openImportButton");
+const exportDevicesButton = document.querySelector("#exportDevicesButton");
+const importDevicesButton = document.querySelector("#importDevicesButton");
+const importDevicesInput = document.querySelector("#importDevicesInput");
 const openDriveButton = document.querySelector("#openDriveButton");
 const syncDriveButton = document.querySelector("#syncDriveButton");
 const driveFolderInput = document.querySelector("#driveFolderInput");
@@ -158,6 +161,8 @@ const stepImage = document.querySelector("#stepImage");
 const stepTitle = document.querySelector("#stepTitle");
 const stepMemo = document.querySelector("#stepMemo");
 const stepSlider = document.querySelector("#stepSlider");
+const slideTitleInput = document.querySelector("#slideTitleInput");
+const saveSlideTitleButton = document.querySelector("#saveSlideTitleButton");
 const simulateImportButton = document.querySelector("#simulateImportButton");
 
 document.querySelector("#prevButton").addEventListener("click", previousStep);
@@ -170,6 +175,9 @@ stepSlider.addEventListener("input", (event) => {
 });
 
 searchInput.addEventListener("input", renderDevices);
+exportDevicesButton.addEventListener("click", exportDevices);
+importDevicesButton.addEventListener("click", () => importDevicesInput.click());
+importDevicesInput.addEventListener("change", importDevices);
 backButton.addEventListener("click", () => {
   if (state.view === "device") return;
   showView("device");
@@ -187,6 +195,10 @@ autoSplitButton.addEventListener("click", autoSplitSelectedPdf);
 previewModalBackdrop.addEventListener("click", closeStepPreview);
 closePreviewModal.addEventListener("click", closeStepPreview);
 fullscreenButton.addEventListener("click", toggleFullscreen);
+saveSlideTitleButton.addEventListener("click", saveCurrentSlideTitle);
+slideTitleInput.addEventListener("input", () => {
+  saveSlideTitleButton.disabled = false;
+});
 simulateImportButton.addEventListener("click", () => {
   simulateImportButton.textContent = "プレビュー作成済み";
   simulateImportButton.style.background = "var(--green)";
@@ -225,9 +237,9 @@ function renderDevices() {
   deviceGrid.innerHTML = "";
 
   filteredDevices.forEach((device) => {
-    const card = document.createElement("button");
-    card.type = "button";
+    const card = document.createElement("article");
     card.className = "device-card";
+    const canDelete = !defaultDeviceIds.has(device.id);
     card.innerHTML = `
       <div class="device-thumb">${device.sourceType}</div>
       <div class="device-card-body">
@@ -236,9 +248,14 @@ function renderDevices() {
           <span>${device.steps.length}工程</span>
           <span>更新: ${device.updatedAt}</span>
         </div>
+        <div class="device-actions">
+          <button class="open-device-button" type="button">開く</button>
+          ${canDelete ? '<button class="danger-button delete-device-button" type="button">削除</button>' : ""}
+        </div>
       </div>
     `;
-    card.addEventListener("click", () => openDevice(device));
+    card.querySelector(".open-device-button").addEventListener("click", () => openDevice(device));
+    card.querySelector(".delete-device-button")?.addEventListener("click", () => deleteDevice(device.id));
     deviceGrid.appendChild(card);
   });
 }
@@ -248,6 +265,22 @@ function openDevice(device) {
   state.stepIndex = 0;
   showView("slide");
   renderSlide();
+}
+
+function deleteDevice(deviceId) {
+  const index = devices.findIndex((device) => device.id === deviceId);
+  if (index === -1 || defaultDeviceIds.has(deviceId)) return;
+
+  const device = devices[index];
+  const ok = window.confirm(`${device.name}を削除しますか？`);
+  if (!ok) return;
+
+  devices.splice(index, 1);
+  saveDevices();
+  renderDevices();
+  if (state.selectedDevice?.id === deviceId) {
+    showView("device");
+  }
 }
 
 async function syncDriveFolder() {
@@ -377,17 +410,53 @@ function renderSplitPreview() {
   openPdfButton.disabled = !state.selectedPdf.webViewLink;
   autoSplitButton.disabled = false;
   registerPreviewButton.disabled = state.previewSteps.length === 0;
-  state.previewSteps.forEach((step) => {
-    const card = document.createElement("button");
-    card.type = "button";
+  state.previewSteps.forEach((step, index) => {
+    const card = document.createElement("article");
     card.className = "split-preview-card";
     card.innerHTML = `
       <img src="${step.image}" alt="${step.title}">
       <strong>${step.title}</strong>
+      <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="工程タイトル">
+      <div class="step-card-actions">
+        <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>上へ</button>
+        <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>下へ</button>
+        <button type="button" class="mini-button danger-button delete-step-button">削除</button>
+      </div>
     `;
     card.addEventListener("click", () => openStepPreview(step));
+    const titleInput = card.querySelector(".split-title-input");
+    titleInput.addEventListener("click", (event) => event.stopPropagation());
+    titleInput.addEventListener("input", (event) => {
+      step.title = event.target.value.trim() || "工程";
+      card.querySelector("strong").textContent = step.title;
+    });
+    card.querySelector(".move-up-button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      movePreviewStep(index, -1);
+    });
+    card.querySelector(".move-down-button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      movePreviewStep(index, 1);
+    });
+    card.querySelector(".delete-step-button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      deletePreviewStep(index);
+    });
     splitPreviewGrid.appendChild(card);
   });
+}
+
+function movePreviewStep(index, direction) {
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= state.previewSteps.length) return;
+  const [step] = state.previewSteps.splice(index, 1);
+  state.previewSteps.splice(nextIndex, 0, step);
+  renderSplitPreview();
+}
+
+function deletePreviewStep(index) {
+  state.previewSteps.splice(index, 1);
+  renderSplitPreview();
 }
 
 function openStepPreview(step) {
@@ -477,7 +546,8 @@ async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal", mergeMode 
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const canvas = await renderPdfPage(page, 1.45);
+    const scale = 1.45;
+    const canvas = await renderPdfPage(page, scale);
     const pageSteps = splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode);
     steps.push(...pageSteps);
   }
@@ -488,7 +558,7 @@ async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal", mergeMode 
 
   return steps.map((step, index) => ({
     ...step,
-    title: `${String(index + 1).padStart(2, "0")} ${step.title}`
+    title: `工程${index + 1}`
   }));
 }
 
@@ -527,17 +597,18 @@ function splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode) 
 
     parts.forEach((part, partIndex) => {
       const crop = cropCanvas(bandCanvas, part.x, part.y, part.width, part.height);
+      const bounds = {
+        x: normalizedBand.x + part.x,
+        y: normalizedBand.y + part.y,
+        width: part.width,
+        height: part.height
+      };
       steps.push({
-        title: `P${pageNumber} 小工程${index + 1}-${partIndex + 1}`,
+        title: `P${pageNumber} 工程${index + 1}-${partIndex + 1}`,
         memo: `${fileName} / ${settings.label}`,
         image: crop.toDataURL("image/png"),
         pageNumber,
-        bounds: {
-          x: normalizedBand.x + part.x,
-          y: normalizedBand.y + part.y,
-          width: part.width,
-          height: part.height
-        }
+        bounds
       });
     });
   });
@@ -896,6 +967,72 @@ function loadSavedDeviceData() {
   }
 }
 
+function exportDevices() {
+  const savedDevices = devices.filter((device) => !defaultDeviceIds.has(device.id));
+  const payload = {
+    app: "AC-BUILDE",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    devices: savedDevices
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  link.href = url;
+  link.download = `ac-builde-backup-${date}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importDevices(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const importedDevices = Array.isArray(payload) ? payload : payload.devices;
+    if (!Array.isArray(importedDevices)) {
+      throw new Error("AC-BUILDEの保存データではありません。");
+    }
+
+    let importedCount = 0;
+    importedDevices.forEach((device) => {
+      if (!isValidSavedDevice(device)) return;
+      const safeDevice = {
+        ...device,
+        id: defaultDeviceIds.has(device.id) ? `drive-${Date.now()}-${importedCount}` : device.id
+      };
+      const existingIndex = devices.findIndex((item) => item.id === safeDevice.id);
+      if (existingIndex >= 0 && !defaultDeviceIds.has(safeDevice.id)) {
+        devices[existingIndex] = safeDevice;
+      } else if (!devices.some((item) => item.id === safeDevice.id)) {
+        devices.unshift(safeDevice);
+      }
+      importedCount += 1;
+    });
+
+    saveDevices();
+    renderDevices();
+    window.alert(`${importedCount}件の装置を読み込みました。`);
+  } catch (error) {
+    window.alert(error.message || "読み込みに失敗しました。");
+  } finally {
+    importDevicesInput.value = "";
+  }
+}
+
+function isValidSavedDevice(device) {
+  return device
+    && typeof device.id === "string"
+    && typeof device.name === "string"
+    && Array.isArray(device.steps)
+    && device.steps.every((step) => typeof step.title === "string" && typeof step.image === "string");
+}
+
 function createPreviewSteps(file) {
   const baseName = file.name.replace(/\.pdf$/i, "");
   const count = Math.max(1, Math.min(file.pages || 3, 8));
@@ -1109,6 +1246,10 @@ function showView(name) {
 function renderSlide() {
   const device = state.selectedDevice;
   const step = device.steps[state.stepIndex];
+  if (!step) {
+    showView("device");
+    return;
+  }
   slideDeviceName.textContent = device.name;
   slideSource.textContent = `${device.sourceType} / ${device.drivePath}`;
   stepCounter.textContent = `${state.stepIndex + 1} / ${device.steps.length}`;
@@ -1118,6 +1259,24 @@ function renderSlide() {
   stepMemo.textContent = step.memo;
   stepSlider.max = String(device.steps.length - 1);
   stepSlider.value = String(state.stepIndex);
+  slideTitleInput.value = step.title;
+  saveSlideTitleButton.disabled = true;
+}
+
+function saveCurrentSlideTitle() {
+  const device = state.selectedDevice;
+  const step = device?.steps[state.stepIndex];
+  if (!step) return;
+
+  step.title = slideTitleInput.value.trim() || `工程${state.stepIndex + 1}`;
+  stepTitle.textContent = step.title;
+  stepImage.alt = `${device.name} ${step.title}`;
+  saveSlideTitleButton.disabled = true;
+
+  if (!defaultDeviceIds.has(device.id)) {
+    saveDevices();
+    renderDevices();
+  }
 }
 
 function previousStep() {

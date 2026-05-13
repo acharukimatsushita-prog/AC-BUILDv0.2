@@ -12,6 +12,7 @@
       JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。
     </div>
   </noscript>
+
   <div class="app-shell">
     <header class="topbar">
       <button class="icon-button" id="backButton" type="button" aria-label="戻る" title="戻る">
@@ -35,10 +36,13 @@
             <p>Google Driveで管理している組立標準を選択します。</p>
           </div>
           <div class="toolbar-actions">
+            <button id="exportDevicesButton" type="button">書き出し</button>
+            <button id="importDevicesButton" type="button">読み込み</button>
             <button id="openDriveButton" type="button">Drive同期</button>
             <button class="primary-button" id="openImportButton" type="button">取り込み</button>
           </div>
         </div>
+        <input id="importDevicesInput" type="file" accept=".json,application/json" hidden>
 
         <label class="search-box">
           <span>検索</span>
@@ -60,7 +64,7 @@
         <div class="drive-import">
           <label class="drive-url-box">
             <span>DriveフォルダURL</span>
-            <input id="driveFolderInput" type="url" value="https://drive.google.com/drive/folders/1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq?usp=drive_link">
+            <input id="driveFolderInput" type="url">
           </label>
           <div class="drive-status" id="driveStatus">未同期</div>
         </div>
@@ -105,8 +109,8 @@
               </div>
             </div>
             <div class="setup-note preview-notice" id="previewNotice">
-              <strong>現在は仮プレビューです</strong>
-              <span>Drive同期ではPDF一覧を取得しています。PDFのページ画像化と小工程切り抜きは次の実装で行います。</span>
+              <strong>タイトルは手動編集できます</strong>
+              <span>自動分割後、各カードの入力欄で工程タイトルを編集してください。</span>
             </div>
             <div id="splitPreviewGrid" class="split-preview-grid"></div>
           </section>
@@ -138,6 +142,13 @@
           <button id="prevControl" type="button">前へ</button>
           <input id="stepSlider" type="range" min="0" max="0" value="0">
           <button id="nextControl" type="button">次へ</button>
+        </div>
+        <div class="step-edit-panel">
+          <label>
+            <span>工程タイトル</span>
+            <input id="slideTitleInput" type="text">
+          </label>
+          <button id="saveSlideTitleButton" type="button">タイトル保存</button>
         </div>
       </section>
 

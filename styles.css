@@ -183,6 +183,10 @@ h2 {
   text-align: left;
 }
 
+.device-card button {
+  min-height: 38px;
+}
+
 .device-thumb {
   display: grid;
   place-items: center;
@@ -193,6 +197,8 @@ h2 {
 }
 
 .device-card-body {
+  display: grid;
+  gap: 10px;
   padding: 14px;
 }
 
@@ -207,6 +213,28 @@ h2 {
   gap: 8px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.device-actions,
+.step-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.open-device-button {
+  flex: 1;
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+  font-weight: 800;
+}
+
+.danger-button {
+  color: #8b1e1e;
+  border-color: #efc7c7;
+  background: #fff1f1;
+  font-weight: 800;
 }
 
 .step-counter {
@@ -285,6 +313,32 @@ h2 {
 
 .bottom-controls input {
   width: 100%;
+}
+
+.step-edit-panel {
+  display: grid;
+  grid-template-columns: 1fr 128px;
+  gap: 12px;
+  align-items: end;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.step-edit-panel label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.step-edit-panel input {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .import-layout {
@@ -441,8 +495,29 @@ h2 {
 
 .split-preview-card strong {
   display: block;
-  padding: 10px 12px;
+  padding: 10px 12px 6px;
   font-size: 15px;
+}
+
+.split-title-input {
+  width: calc(100% - 20px);
+  min-height: 38px;
+  margin: 0 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.step-card-actions {
+  padding: 0 10px 10px;
+}
+
+.mini-button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
 }
 
 .preview-modal {
@@ -609,5 +684,9 @@ h2 {
 
   .bottom-controls {
     grid-template-columns: 78px 1fr 78px;
+  }
+
+  .step-edit-panel {
+    grid-template-columns: 1fr;
   }
 }
