@@ -285,7 +285,7 @@ function renderDriveImport() {
 
 function selectDrivePdf(file) {
   state.selectedPdf = file;
-  state.previewSteps = createPreviewSteps(file);
+  state.previewSteps = [];
   saveDriveSettings();
   renderDriveImport();
   renderSplitPreview();
@@ -305,6 +305,15 @@ function renderSplitPreview() {
   openPdfButton.disabled = !state.selectedPdf.webViewLink;
   autoSplitButton.disabled = false;
   registerPreviewButton.disabled = state.previewSteps.length === 0;
+  if (state.previewSteps.length === 0) {
+    splitPreviewGrid.innerHTML = `
+      <div class="setup-note">
+        <strong>プレビューはまだありません</strong>
+        <span>自動分割を押すと、PDFから工程プレビューを作成します。</span>
+      </div>
+    `;
+    return;
+  }
   state.previewSteps.forEach((step, index) => {
     const card = document.createElement("article");
     card.className = "split-preview-card";
@@ -315,6 +324,9 @@ function renderSplitPreview() {
       <div class="step-card-actions">
         <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>上へ</button>
         <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>下へ</button>
+        <button type="button" class="mini-button resplit-step-button">再分割</button>
+        <button type="button" class="mini-button merge-prev-button" ${index === 0 ? "disabled" : ""}>前と結合</button>
+        <button type="button" class="mini-button merge-next-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>次と結合</button>
         <button type="button" class="mini-button danger-button delete-step-button">削除</button>
       </div>
     `;
@@ -332,6 +344,18 @@ function renderSplitPreview() {
     card.querySelector(".move-down-button").addEventListener("click", (event) => {
       event.stopPropagation();
       movePreviewStep(index, 1);
+    });
+    card.querySelector(".resplit-step-button").addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await resplitPreviewStep(index);
+    });
+    card.querySelector(".merge-prev-button").addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await mergePreviewSteps(index - 1, index);
+    });
+    card.querySelector(".merge-next-button").addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await mergePreviewSteps(index, index + 1);
     });
     card.querySelector(".delete-step-button").addEventListener("click", (event) => {
       event.stopPropagation();
@@ -352,6 +376,91 @@ function movePreviewStep(index, direction) {
 function deletePreviewStep(index) {
   state.previewSteps.splice(index, 1);
   renderSplitPreview();
+}
+
+async function resplitPreviewStep(index) {
+  const step = state.previewSteps[index];
+  if (!step) return;
+
+  try {
+    const image = await loadImage(step.image);
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(image, 0, 0);
+
+    const splitSteps = splitCanvasByWhitespace(
+      canvas,
+      step.pageNumber || 1,
+      state.selectedPdf?.name || state.selectedDevice?.name || "工程画像",
+      "micro",
+      "weak"
+    );
+
+    const fallbackSteps = splitSteps.length <= 1
+      ? splitCanvasByGrid(canvas, step)
+      : splitSteps;
+
+    if (fallbackSteps.length <= 1) {
+      window.alert("これ以上分割できる候補が見つかりませんでした。");
+      return;
+    }
+
+    const renamedSteps = fallbackSteps.map((splitStep, splitIndex) => ({
+      ...splitStep,
+      title: `${step.title}-${splitIndex + 1}`
+    }));
+
+    state.previewSteps.splice(index, 1, ...renamedSteps);
+    renderSplitPreview();
+  } catch (error) {
+    window.alert(error.message || "再分割に失敗しました。");
+  }
+}
+
+async function mergePreviewSteps(firstIndex, secondIndex) {
+  if (firstIndex < 0 || secondIndex >= state.previewSteps.length) return;
+
+  const first = state.previewSteps[firstIndex];
+  const second = state.previewSteps[secondIndex];
+  const image = await combineStepImages(first.image, second.image);
+  const mergedStep = {
+    title: first.title,
+    memo: `${first.memo || ""} / ${second.title}と結合`.trim(),
+    image
+  };
+
+  state.previewSteps.splice(firstIndex, 2, mergedStep);
+  renderSplitPreview();
+}
+
+function combineStepImages(firstSrc, secondSrc) {
+  return Promise.all([loadImage(firstSrc), loadImage(secondSrc)]).then(([first, second]) => {
+    const width = Math.max(first.naturalWidth, second.naturalWidth);
+    const gap = 18;
+    const margin = 16;
+    const canvas = document.createElement("canvas");
+    canvas.width = width + margin * 2;
+    canvas.height = first.naturalHeight + second.naturalHeight + gap + margin * 2;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(first, margin, margin);
+    context.fillStyle = "#dbe2ea";
+    context.fillRect(margin, margin + first.naturalHeight + Math.floor(gap / 2), width, 2);
+    context.drawImage(second, margin, margin + first.naturalHeight + gap);
+    return canvas.toDataURL("image/png");
+  });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("画像の結合に失敗しました。"));
+    image.src = src;
+  });
 }
 
 function openStepPreview(step) {
@@ -662,6 +771,22 @@ function getSplitSettings(mode, mergeMode = "normal") {
       absorbHeight: 70,
       absorbWidth: 120,
       groupMargin: 8
+    },
+    micro: {
+      label: "再分割",
+      minGap: 8,
+      joinGap: 2,
+      margin: 4,
+      minBandSize: 24,
+      minVerticalSize: 64,
+      horizontalInkRatio: 0.0018,
+      verticalInkRatio: 0.003,
+      useVerticalSplit: true,
+      groupGap: 4,
+      absorbGap: 10,
+      absorbHeight: 32,
+      absorbWidth: 72,
+      groupMargin: 4
     }
   };
 
@@ -715,6 +840,38 @@ function cropCanvas(source, x, y, width, height) {
   const context = canvas.getContext("2d");
   context.drawImage(source, x, y, width, height, 0, 0, width, height);
   return canvas;
+}
+
+function splitCanvasByGrid(canvas, sourceStep) {
+  const parts = [];
+  const isWide = canvas.width / canvas.height > 1.25;
+  const cols = isWide ? 2 : 1;
+  const rows = canvas.height > 720 ? 3 : 2;
+  const minPartHeight = 160;
+  const minPartWidth = 180;
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const x = Math.round((canvas.width / cols) * col);
+      const y = Math.round((canvas.height / rows) * row);
+      const right = Math.round((canvas.width / cols) * (col + 1));
+      const bottom = Math.round((canvas.height / rows) * (row + 1));
+      const width = right - x;
+      const height = bottom - y;
+      if (width < minPartWidth || height < minPartHeight) continue;
+
+      const crop = cropCanvas(canvas, x, y, width, height);
+      parts.push({
+        title: sourceStep.title,
+        memo: `${sourceStep.memo || ""} / グリッド再分割`.trim(),
+        image: crop.toDataURL("image/png"),
+        pageNumber: sourceStep.pageNumber || 1,
+        bounds: { x, y, width, height }
+      });
+    }
+  }
+
+  return parts;
 }
 
 function consolidateSteps(steps, sourceCanvas, settings) {
@@ -928,19 +1085,6 @@ function isValidSavedDevice(device) {
     && device.steps.every((step) => typeof step.title === "string" && typeof step.image === "string");
 }
 
-function createPreviewSteps(file) {
-  const baseName = file.name.replace(/\.pdf$/i, "");
-  const count = Math.max(1, Math.min(file.pages || 3, 8));
-  return Array.from({ length: count }, (_, index) => {
-    const number = String(index + 1).padStart(2, "0");
-    return {
-      title: `${number} ${baseName}`,
-      memo: file.webViewLink ? "Drive PDFプレビュー" : "自動分割プレビュー",
-      image: file.thumbnailLink || makeStepSvg(number, "分割候補", `${file.name} / ページ・工程境界を検出`)
-    };
-  });
-}
-
 function initializeDriveSettings() {
   const savedSettings = loadDriveSettings();
   const savedUrl = savedSettings.driveFolderUrl || "";
@@ -964,7 +1108,7 @@ function restoreDriveSelection(categories) {
 
   state.selectedCategory = selectedCategory;
   state.selectedPdf = selectedPdf;
-  state.previewSteps = selectedPdf ? createPreviewSteps(selectedPdf) : [];
+  state.previewSteps = [];
 }
 
 function saveDriveSettings() {
