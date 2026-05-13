@@ -237,6 +237,13 @@ h2 {
   font-weight: 800;
 }
 
+#manageModeButton.is-active {
+  color: #ffffff;
+  background: var(--amber);
+  border-color: var(--amber);
+  font-weight: 800;
+}
+
 .step-counter {
   min-width: 92px;
   padding: 10px 12px;

@@ -27,7 +27,8 @@ const state = {
   selectedPdf: null,
   previewSteps: [],
   savedCategoryId: "",
-  savedPdfId: ""
+  savedPdfId: "",
+  manageMode: false
 };
 
 const deviceGrid = document.querySelector("#deviceGrid");
@@ -38,6 +39,7 @@ const exportDevicesButton = document.querySelector("#exportDevicesButton");
 const importDevicesButton = document.querySelector("#importDevicesButton");
 const importDevicesInput = document.querySelector("#importDevicesInput");
 const openDriveButton = document.querySelector("#openDriveButton");
+const manageModeButton = document.querySelector("#manageModeButton");
 const syncDriveButton = document.querySelector("#syncDriveButton");
 const driveFolderInput = document.querySelector("#driveFolderInput");
 const driveStatus = document.querySelector("#driveStatus");
@@ -88,6 +90,7 @@ openDriveButton.addEventListener("click", () => {
   showView("drive");
   renderDriveImport();
 });
+manageModeButton.addEventListener("click", toggleManageMode);
 syncDriveButton.addEventListener("click", syncDriveFolder);
 registerPreviewButton.addEventListener("click", registerPreviewDevice);
 openPdfButton.addEventListener("click", openSelectedPdf);
@@ -122,6 +125,7 @@ document.querySelector("#slideView").addEventListener("touchend", (event) => {
 
 initializeDriveSettings();
 loadSavedDevices();
+updateManageModeButton();
 renderDevices();
 renderDriveImport();
 showView("device");
@@ -134,7 +138,7 @@ function renderDevices() {
   filteredDevices.forEach((device) => {
     const card = document.createElement("article");
     card.className = "device-card";
-    const canDelete = !defaultDeviceIds.has(device.id);
+    const canDelete = state.manageMode && !defaultDeviceIds.has(device.id);
     card.innerHTML = `
       <div class="device-thumb">${device.sourceType}</div>
       <div class="device-card-body">
@@ -289,6 +293,18 @@ function selectDrivePdf(file) {
   saveDriveSettings();
   renderDriveImport();
   renderSplitPreview();
+}
+
+function toggleManageMode() {
+  state.manageMode = !state.manageMode;
+  updateManageModeButton();
+  renderDevices();
+}
+
+function updateManageModeButton() {
+  manageModeButton.classList.toggle("is-active", state.manageMode);
+  manageModeButton.setAttribute("aria-pressed", String(state.manageMode));
+  manageModeButton.textContent = state.manageMode ? "管理モードON" : "管理モード";
 }
 
 function renderSplitPreview() {
