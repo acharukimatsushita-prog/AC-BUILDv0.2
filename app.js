@@ -1,104 +1,8 @@
-const devices = [
-  {
-    id: "v-belt-safety",
-    name: "Vベルト巻込まれ安全体感装置",
-    sourceType: "PDF",
-    updatedAt: "2026-05-13",
-    drivePath: "Google Drive / AC-BUILDE / sources",
-    steps: [
-      {
-        title: "フレーム準備",
-        memo: "自動分割候補 01",
-        image: makeStepSvg("01", "フレーム準備", "キャスター・アジャスター取付位置を確認")
-      },
-      {
-        title: "キャスター取付",
-        memo: "自動分割候補 02",
-        image: makeStepSvg("02", "キャスター取付", "指定部品と取付方向を確認")
-      },
-      {
-        title: "ベアリング組付け",
-        memo: "自動分割候補 03",
-        image: makeStepSvg("03", "ベアリング組付け", "シャフト・スペーサーを順番通りに配置")
-      }
-    ]
-  },
-  {
-    id: "sample-jig-a",
-    name: "装置A 組立標準",
-    sourceType: "Excel",
-    updatedAt: "未取り込み",
-    drivePath: "Google Drive / AC-BUILDE / sources",
-    steps: [
-      {
-        title: "Excel取り込み待ち",
-        memo: "サンプル",
-        image: makeStepSvg("01", "Excel取り込み待ち", "DriveからExcelを選択して自動分割")
-      }
-    ]
-  },
-  {
-    id: "sample-jig-b",
-    name: "装置B 組立標準",
-    sourceType: "PDF",
-    updatedAt: "未取り込み",
-    drivePath: "Google Drive / AC-BUILDE / sources",
-    steps: [
-      {
-        title: "PDF取り込み待ち",
-        memo: "サンプル",
-        image: makeStepSvg("01", "PDF取り込み待ち", "ページ単位または工程番号で分割")
-      }
-    ]
-  }
-];
+const devices = [];
 
 const driveRoot = {
   folderId: "1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq",
-  categories: [
-    {
-      id: "safety-experience",
-      name: "安全体感装置",
-      files: [
-        {
-          id: "pdf-v-belt",
-          name: "Vベルト巻込まれ安全体感装置組立図面.pdf",
-          modifiedTime: "Driveから取得予定",
-          pages: 6
-        },
-        {
-          id: "pdf-roller",
-          name: "ローラー巻込まれ安全体感装置組立図面.pdf",
-          modifiedTime: "Driveから取得予定",
-          pages: 5
-        }
-      ]
-    },
-    {
-      id: "training-jig",
-      name: "教育用治具",
-      files: [
-        {
-          id: "pdf-training-a",
-          name: "教育用治具A 組立図面.pdf",
-          modifiedTime: "Driveから取得予定",
-          pages: 4
-        }
-      ]
-    },
-    {
-      id: "inspection",
-      name: "検査装置",
-      files: [
-        {
-          id: "pdf-inspection-a",
-          name: "検査装置A 組立図面.pdf",
-          modifiedTime: "Driveから取得予定",
-          pages: 7
-        }
-      ]
-    }
-  ]
+  categories: []
 };
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -112,7 +16,6 @@ const defaultDeviceIds = new Set(devices.map((device) => device.id));
 const views = {
   device: document.querySelector("#deviceView"),
   slide: document.querySelector("#slideView"),
-  import: document.querySelector("#importView"),
   drive: document.querySelector("#driveView")
 };
 
@@ -131,7 +34,6 @@ const deviceGrid = document.querySelector("#deviceGrid");
 const searchInput = document.querySelector("#searchInput");
 const backButton = document.querySelector("#backButton");
 const fullscreenButton = document.querySelector("#fullscreenButton");
-const openImportButton = document.querySelector("#openImportButton");
 const exportDevicesButton = document.querySelector("#exportDevicesButton");
 const importDevicesButton = document.querySelector("#importDevicesButton");
 const importDevicesInput = document.querySelector("#importDevicesInput");
@@ -163,7 +65,6 @@ const stepMemo = document.querySelector("#stepMemo");
 const stepSlider = document.querySelector("#stepSlider");
 const slideTitleInput = document.querySelector("#slideTitleInput");
 const saveSlideTitleButton = document.querySelector("#saveSlideTitleButton");
-const simulateImportButton = document.querySelector("#simulateImportButton");
 
 document.querySelector("#prevButton").addEventListener("click", previousStep);
 document.querySelector("#nextButton").addEventListener("click", nextStep);
@@ -183,7 +84,6 @@ backButton.addEventListener("click", () => {
   showView("device");
 });
 
-openImportButton.addEventListener("click", () => showView("import"));
 openDriveButton.addEventListener("click", () => {
   showView("drive");
   renderDriveImport();
@@ -198,11 +98,6 @@ fullscreenButton.addEventListener("click", toggleFullscreen);
 saveSlideTitleButton.addEventListener("click", saveCurrentSlideTitle);
 slideTitleInput.addEventListener("input", () => {
   saveSlideTitleButton.disabled = false;
-});
-simulateImportButton.addEventListener("click", () => {
-  simulateImportButton.textContent = "プレビュー作成済み";
-  simulateImportButton.style.background = "var(--green)";
-  simulateImportButton.style.borderColor = "var(--green)";
 });
 
 document.addEventListener("keydown", (event) => {
