@@ -142,6 +142,7 @@ const registerPreviewButton = document.querySelector("#registerPreviewButton");
 const openPdfButton = document.querySelector("#openPdfButton");
 const autoSplitButton = document.querySelector("#autoSplitButton");
 const splitModeSelect = document.querySelector("#splitModeSelect");
+const mergeModeSelect = document.querySelector("#mergeModeSelect");
 const previewModal = document.querySelector("#previewModal");
 const previewModalBackdrop = document.querySelector("#previewModalBackdrop");
 const closePreviewModal = document.querySelector("#closePreviewModal");
@@ -425,7 +426,12 @@ async function autoSplitSelectedPdf() {
 
   try {
     const pdfBytes = await fetchDrivePdfBytes(state.selectedPdf.id);
-    const steps = await splitPdfIntoSteps(pdfBytes, state.selectedPdf.name, splitModeSelect.value);
+    const steps = await splitPdfIntoSteps(
+      pdfBytes,
+      state.selectedPdf.name,
+      splitModeSelect.value,
+      mergeModeSelect.value
+    );
     state.previewSteps = steps;
     renderSplitPreview();
   } catch (error) {
@@ -458,7 +464,7 @@ async function fetchDrivePdfBytes(fileId) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal") {
+async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal", mergeMode = "normal") {
   const pdfjsLib = window.pdfjsLib;
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -469,7 +475,7 @@ async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal") {
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const canvas = await renderPdfPage(page, 1.45);
-    const pageSteps = splitCanvasByWhitespace(canvas, pageNumber, fileName, mode);
+    const pageSteps = splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode);
     steps.push(...pageSteps);
   }
 
@@ -493,10 +499,10 @@ async function renderPdfPage(page, scale) {
   return canvas;
 }
 
-function splitCanvasByWhitespace(canvas, pageNumber, fileName, mode) {
+function splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode) {
   const context = canvas.getContext("2d", { willReadFrequently: true });
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  const settings = getSplitSettings(mode);
+  const settings = getSplitSettings(mode, mergeMode);
   const horizontalBands = findContentBands(imageData, canvas.width, canvas.height, "horizontal", settings);
   const usableBands = horizontalBands.filter((band) => band.end - band.start > settings.minBandSize);
   const bands = usableBands.length > 0 ? usableBands : [{ top: 0, bottom: canvas.height }];
@@ -638,7 +644,7 @@ function normalizeBand(band, direction, width, height) {
   return { x: 0, y: band.start, width, height: band.end - band.start };
 }
 
-function getSplitSettings(mode) {
+function getSplitSettings(mode, mergeMode = "normal") {
   const settings = {
     normal: {
       label: "余白自動分割",
@@ -690,7 +696,47 @@ function getSplitSettings(mode) {
     }
   };
 
-  return settings[mode] || settings.normal;
+  return applyMergeMode(settings[mode] || settings.normal, mergeMode);
+}
+
+function applyMergeMode(settings, mergeMode) {
+  const mergeSettings = {
+    weak: {
+      groupGap: 0.55,
+      absorbGap: 0.55,
+      absorbHeight: 0.75,
+      absorbWidth: 0.75,
+      groupMargin: 0.75,
+      label: "まとめ弱"
+    },
+    normal: {
+      groupGap: 1,
+      absorbGap: 1,
+      absorbHeight: 1,
+      absorbWidth: 1,
+      groupMargin: 1,
+      label: "まとめ標準"
+    },
+    strong: {
+      groupGap: 1.75,
+      absorbGap: 1.75,
+      absorbHeight: 1.35,
+      absorbWidth: 1.35,
+      groupMargin: 1.35,
+      label: "まとめ強"
+    }
+  };
+  const factor = mergeSettings[mergeMode] || mergeSettings.normal;
+
+  return {
+    ...settings,
+    label: `${settings.label} / ${factor.label}`,
+    groupGap: Math.round(settings.groupGap * factor.groupGap),
+    absorbGap: Math.round(settings.absorbGap * factor.absorbGap),
+    absorbHeight: Math.round(settings.absorbHeight * factor.absorbHeight),
+    absorbWidth: Math.round(settings.absorbWidth * factor.absorbWidth),
+    groupMargin: Math.round(settings.groupMargin * factor.groupMargin)
+  };
 }
 
 function cropCanvas(source, x, y, width, height) {
