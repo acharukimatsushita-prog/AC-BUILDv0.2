@@ -105,7 +105,9 @@ const FOLDER_MIME = "application/vnd.google-apps.folder";
 const PDF_MIME = "application/pdf";
 const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
 const STORAGE_KEY = "ac-builde-drive-settings";
+const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
 const config = window.AC_BUILDE_CONFIG || {};
+const defaultDeviceIds = new Set(devices.map((device) => device.id));
 
 const views = {
   device: document.querySelector("#deviceView"),
@@ -211,8 +213,9 @@ document.querySelector("#slideView").addEventListener("touchend", (event) => {
   if (distance > 0) previousStep();
 }, { passive: true });
 
-renderDevices();
 initializeDriveSettings();
+loadSavedDevices();
+renderDevices();
 renderDriveImport();
 showView("device");
 
@@ -854,8 +857,43 @@ function registerPreviewDevice() {
   };
 
   devices.unshift(device);
+  try {
+    saveDevices();
+  } catch (error) {
+    devices.shift();
+    showPreviewError(error.message);
+    return;
+  }
   renderDevices();
   openDevice(device);
+}
+
+function saveDevices() {
+  const savedDevices = devices.filter((device) => !defaultDeviceIds.has(device.id));
+
+  try {
+    localStorage.setItem(SAVED_DEVICES_KEY, JSON.stringify(savedDevices));
+  } catch {
+    throw new Error("保存容量が不足しています。分割数を減らすか、不要な装置を削除してください。");
+  }
+}
+
+function loadSavedDevices() {
+  const savedDevices = loadSavedDeviceData();
+  savedDevices.reverse().forEach((device) => {
+    if (!devices.some((item) => item.id === device.id)) {
+      devices.unshift(device);
+    }
+  });
+}
+
+function loadSavedDeviceData() {
+  try {
+    const savedDevices = JSON.parse(localStorage.getItem(SAVED_DEVICES_KEY) || "[]");
+    return Array.isArray(savedDevices) ? savedDevices : [];
+  } catch {
+    return [];
+  }
 }
 
 function createPreviewSteps(file) {
