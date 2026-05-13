@@ -66,6 +66,13 @@ button:active {
   line-height: 1;
 }
 
+.version-label {
+  margin: 6px 0 0;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--muted);
@@ -100,6 +107,13 @@ main {
   gap: 16px;
   align-items: end;
   margin-bottom: 18px;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 h2,
@@ -279,6 +293,123 @@ h2 {
   gap: 18px;
 }
 
+.drive-import {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.drive-url-box {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.drive-url-box input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.drive-status {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.drive-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 260px) minmax(230px, 360px) 1fr;
+  gap: 14px;
+}
+
+.drive-sidebar,
+.drive-files,
+.drive-preview {
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+}
+
+.category-list,
+.pdf-list {
+  display: grid;
+  gap: 8px;
+}
+
+.category-button,
+.pdf-button {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.category-button.is-selected,
+.pdf-button.is-selected {
+  border-color: var(--blue);
+  background: #eaf2f9;
+  color: var(--blue-dark);
+  font-weight: 800;
+}
+
+.pdf-button small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.preview-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.preview-head p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.split-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.split-preview-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.split-preview-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #f9fbfd;
+}
+
+.split-preview-card strong {
+  display: block;
+  padding: 9px 10px;
+  font-size: 13px;
+}
+
 .import-panel,
 .preview-panel {
   border: 1px solid var(--line);
@@ -343,6 +474,22 @@ h2 {
   color: var(--muted);
 }
 
+.setup-note,
+.error-text {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #edd29b;
+  border-radius: 8px;
+  background: #fff8e8;
+  color: #6d4a00;
+}
+
+.setup-note span {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 @media (max-width: 760px) {
   .toolbar,
   .slide-head,
@@ -352,6 +499,11 @@ h2 {
   }
 
   .import-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .drive-import,
+  .drive-layout {
     grid-template-columns: 1fr;
   }
 

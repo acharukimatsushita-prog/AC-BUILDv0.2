@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <noscript>
+    <div style="padding:16px;font-family:Meiryo,sans-serif;background:#fff3cd;color:#5f4300;">
+      JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。
+    </div>
+  </noscript>
   <div class="app-shell">
     <header class="topbar">
       <button class="icon-button" id="backButton" type="button" aria-label="戻る" title="戻る">
@@ -15,6 +20,7 @@
       <div>
         <p class="eyebrow">Assembly Standard Viewer</p>
         <h1>AC-BUILDE</h1>
+        <p class="version-label">試作版 v0.1 / Google Drive運用モデル</p>
       </div>
       <button class="icon-button" id="fullscreenButton" type="button" aria-label="全画面" title="全画面">
         <span aria-hidden="true">⛶</span>
@@ -28,7 +34,10 @@
             <h2 id="deviceTitle">装置選択</h2>
             <p>Google Driveで管理している組立標準を選択します。</p>
           </div>
-          <button class="primary-button" id="openImportButton" type="button">取り込み</button>
+          <div class="toolbar-actions">
+            <button id="openDriveButton" type="button">Drive同期</button>
+            <button class="primary-button" id="openImportButton" type="button">取り込み</button>
+          </div>
         </div>
 
         <label class="search-box">
@@ -37,6 +46,47 @@
         </label>
 
         <div class="device-grid" id="deviceGrid"></div>
+      </section>
+
+      <section class="view" id="driveView" aria-labelledby="driveTitle">
+        <div class="toolbar">
+          <div>
+            <h2 id="driveTitle">Google Drive同期</h2>
+            <p>大分類フォルダから装置PDFを読み込み、分割候補を作成します。</p>
+          </div>
+          <button class="primary-button" id="syncDriveButton" type="button">同期</button>
+        </div>
+
+        <div class="drive-import">
+          <label class="drive-url-box">
+            <span>DriveフォルダURL</span>
+            <input id="driveFolderInput" type="url" value="https://drive.google.com/drive/folders/1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq?usp=drive_link">
+          </label>
+          <div class="drive-status" id="driveStatus">未同期</div>
+        </div>
+
+        <div class="drive-layout">
+          <aside class="drive-sidebar">
+            <h3>大分類</h3>
+            <div id="categoryList" class="category-list"></div>
+          </aside>
+
+          <section class="drive-files">
+            <h3>装置PDF</h3>
+            <div id="pdfList" class="pdf-list"></div>
+          </section>
+
+          <section class="drive-preview">
+            <div class="preview-head">
+              <div>
+                <h3>分割後プレビュー</h3>
+                <p id="previewDeviceName">PDFを選択してください。</p>
+              </div>
+              <button id="registerPreviewButton" type="button">装置一覧へ追加</button>
+            </div>
+            <div id="splitPreviewGrid" class="split-preview-grid"></div>
+          </section>
+        </div>
       </section>
 
       <section class="view" id="slideView" aria-labelledby="slideDeviceName">
@@ -121,6 +171,7 @@
     </main>
   </div>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -40,3 +40,42 @@ Google Drive/
 3. ExcelからPDFまたは画像への変換
 4. 工程番号・見出し・余白検出による自動分割
 5. 分割結果の手直し画面
+
+## Google Drive取り込みの流れ
+
+対象フォルダ:
+
+```text
+https://drive.google.com/drive/folders/1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq?usp=drive_link
+```
+
+想定構成:
+
+```text
+AC-BUILDE Drive Root/
+  大分類A/
+    装置1.pdf
+    装置2.pdf
+  大分類B/
+    装置3.pdf
+```
+
+Drive APIでは、フォルダIDを元に直下のファイルとフォルダを取得し、大分類フォルダを再帰的に読み込みます。
+実連携にはGoogle CloudでDrive APIを有効化し、APIキーまたはOAuthクライアントIDを設定します。
+
+## 実Drive同期の設定
+
+1. Google Cloud Consoleでプロジェクトを作成
+2. Google Drive APIを有効化
+3. APIキーを作成
+4. 対象のGoogle Driveフォルダを「リンクを知っている全員が閲覧可」に設定
+5. `config.js` の `googleDriveApiKey` にAPIキーを設定
+
+```js
+window.AC_BUILDE_CONFIG = {
+  googleDriveApiKey: "ここにAPIキー",
+  driveFolderUrl: "https://drive.google.com/drive/folders/..."
+};
+```
+
+ブラウザ版ではAPIキーが利用者から見えるため、社内限定の本運用ではOAuthログイン方式またはサーバー側プロキシ方式に変更するのが安全です。
