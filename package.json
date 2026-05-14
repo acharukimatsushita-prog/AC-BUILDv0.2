@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "api": "node server.mjs",
+    "usage:costs": "node scripts/openai-costs.mjs --once",
+    "usage:watch": "node scripts/openai-costs.mjs --watch",
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-table": "^8.21.3",
     "@vitejs/plugin-react": "^5.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

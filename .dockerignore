@@ -1,0 +1,8 @@
+.git
+.env
+dist
+node_modules
+my-app
+*.log
+Dockerfile
+docker-compose.yml

@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "OpenAI: watch costs",
+      "type": "shell",
+      "command": "npm.cmd run usage:watch",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "OpenAI: show costs once",
+      "type": "shell",
+      "command": "npm.cmd run usage:costs",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      }
+    }
+  ]
+}

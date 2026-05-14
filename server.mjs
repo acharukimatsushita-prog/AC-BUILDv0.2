@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { queryDb } from "./db.mjs";
 
 const port = Number(process.argv[2] || process.env.PORT || 8099);
+const host = process.env.HOST || "127.0.0.1";
 const root = process.cwd();
 const maxJsonBodyBytes = 1_000_000;
 
@@ -58,8 +59,8 @@ createServer(async (request, response) => {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Not found");
   }
-}).listen(port, "127.0.0.1", () => {
-  console.log(`AC-BUILDE: http://127.0.0.1:${port}`);
+}).listen(port, host, () => {
+  console.log(`AC-BUILDE: http://${host}:${port}`);
   console.log(`Root: ${root}`);
 });
 
