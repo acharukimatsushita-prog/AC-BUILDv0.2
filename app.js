@@ -30,7 +30,8 @@ const state = {
   previewSteps: [],
   savedCategoryId: "",
   savedPdfId: "",
-  manageMode: false
+  manageMode: false,
+  confirmedCheckKeys: new Set()
 };
 
 const deviceGrid = document.querySelector("#deviceGrid");
@@ -76,8 +77,7 @@ document.querySelector("#nextButton").addEventListener("click", nextStep);
 document.querySelector("#prevControl").addEventListener("click", previousStep);
 document.querySelector("#nextControl").addEventListener("click", nextStep);
 stepSlider.addEventListener("input", (event) => {
-  state.stepIndex = Number(event.target.value);
-  renderSlide();
+  requestStepChange(Number(event.target.value));
 });
 
 searchInput.addEventListener("input", renderDevices);
@@ -110,7 +110,10 @@ document.addEventListener("keydown", (event) => {
   if (state.view !== "slide") return;
   if (event.key === "ArrowRight") nextStep();
   if (event.key === "ArrowLeft") previousStep();
-  if (event.key === "Escape") closeStepPreview();
+  if (event.key === "Escape") {
+    closeStepPreview();
+    closeCheckModal();
+  }
 });
 
 let touchStartX = 0;
@@ -168,6 +171,7 @@ function renderDevices() {
 function openDevice(device) {
   state.selectedDevice = device;
   state.stepIndex = 0;
+  state.confirmedCheckKeys.clear();
   showView("slide");
   renderSlide();
 }
@@ -357,6 +361,16 @@ function renderSplitPreview() {
       <img src="${step.image}" alt="${step.title}">
       <strong>${step.title}</strong>
       <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="工程タイトル">
+      <div class="split-popup-panel">
+        <label class="split-popup-toggle">
+          <input class="split-popup-enabled" type="checkbox" ${isStepPopupEnabled(step) ? "checked" : ""}>
+          <span>POP確認を表示</span>
+        </label>
+        <label class="split-check-field">
+          <span>確認項目（1行1項目）</span>
+          <textarea class="split-check-input" rows="3" placeholder="例: ネジの締め忘れがないか確認した" ${isStepPopupEnabled(step) ? "" : "disabled"}>${escapeHtml(formatStepChecks(step.checks))}</textarea>
+        </label>
+      </div>
       <div class="step-card-actions">
         <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>上へ移動</button>
         <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>下へ移動</button>
@@ -372,6 +386,22 @@ function renderSplitPreview() {
     titleInput.addEventListener("input", (event) => {
       step.title = event.target.value.trim() || "工程";
       card.querySelector("strong").textContent = step.title;
+    });
+    const checkInput = card.querySelector(".split-check-input");
+    const popupInput = card.querySelector(".split-popup-enabled");
+    card.querySelector(".split-popup-panel").addEventListener("click", (event) => event.stopPropagation());
+    popupInput.addEventListener("change", (event) => {
+      step.popupEnabled = event.target.checked;
+      checkInput.disabled = !event.target.checked;
+    });
+    checkInput.addEventListener("click", (event) => event.stopPropagation());
+    checkInput.addEventListener("input", (event) => {
+      step.checks = parseStepChecks(event.target.value);
+      if (step.checks.length > 0) {
+        step.popupEnabled = true;
+        popupInput.checked = true;
+        checkInput.disabled = false;
+      }
     });
     card.querySelector(".move-up-button").addEventListener("click", (event) => {
       event.stopPropagation();
@@ -399,6 +429,115 @@ function renderSplitPreview() {
     });
     splitPreviewGrid.appendChild(card);
   });
+}
+
+function parseStepChecks(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map((text, index) => ({
+      id: `check-${Date.now()}-${index}`,
+      text,
+      required: true
+    }));
+}
+
+function formatStepChecks(checks) {
+  return normalizeStepChecks(checks).map((check) => check.text).join("\n");
+}
+
+function normalizeStepChecks(checks) {
+  if (!Array.isArray(checks)) return [];
+  return checks
+    .map((check, index) => {
+      if (typeof check === "string") {
+        return { id: `check-${index}`, text: check.trim(), required: true };
+      }
+      const text = typeof check?.text === "string" ? check.text.trim() : "";
+      if (!text) return null;
+      return {
+        id: typeof check.id === "string" && check.id ? check.id : `check-${index}`,
+        text,
+        required: check.required !== false
+      };
+    })
+    .filter(Boolean);
+}
+
+function isStepPopupEnabled(step) {
+  const checks = normalizeStepChecks(step?.checks);
+  if (step?.popupEnabled === true) return true;
+  if (checks.length === 0) return false;
+  return step?.popupEnabled !== false;
+}
+
+function openCheckModal({ title, checks, onConfirm }) {
+  const modal = getCheckModal();
+  const list = modal.querySelector(".check-modal-list");
+  const titleElement = modal.querySelector(".check-modal-title");
+  const confirmButton = modal.querySelector(".check-modal-confirm");
+
+  titleElement.textContent = `${title} の確認`;
+  list.innerHTML = "";
+
+  checks.forEach((check) => {
+    const label = document.createElement("label");
+    label.className = "check-modal-item";
+    label.innerHTML = `
+      <input type="checkbox">
+      <span>${escapeHtml(check.text)}</span>
+    `;
+    list.appendChild(label);
+  });
+
+  const updateConfirmState = () => {
+    const inputs = [...list.querySelectorAll("input")];
+    confirmButton.disabled = inputs.some((input) => !input.checked);
+  };
+
+  list.onchange = updateConfirmState;
+  confirmButton.onclick = () => {
+    closeCheckModal();
+    onConfirm();
+  };
+  modal.querySelector(".check-modal-cancel").onclick = closeCheckModal;
+  modal.querySelector(".check-modal-backdrop").onclick = closeCheckModal;
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  updateConfirmState();
+}
+
+function closeCheckModal() {
+  const modal = document.querySelector("#stepCheckModal");
+  if (!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function getCheckModal() {
+  let modal = document.querySelector("#stepCheckModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "stepCheckModal";
+  modal.className = "check-modal";
+  modal.setAttribute("aria-hidden", "true");
+  modal.innerHTML = `
+    <div class="check-modal-backdrop"></div>
+    <div class="check-modal-body" role="dialog" aria-modal="true" aria-labelledby="stepCheckModalTitle">
+      <h2 class="check-modal-title" id="stepCheckModalTitle">確認</h2>
+      <p>次の工程へ進む前に確認してください。</p>
+      <div class="check-modal-list"></div>
+      <div class="check-modal-actions">
+        <button type="button" class="check-modal-cancel">キャンセル</button>
+        <button type="button" class="primary-button check-modal-confirm">確認して次へ</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
 }
 
 function movePreviewStep(index, direction) {
@@ -464,7 +603,12 @@ async function mergePreviewSteps(firstIndex, secondIndex) {
   const mergedStep = {
     title: first.title,
     memo: `${first.memo || ""} / ${second.title}を結合`.trim(),
-    image
+    image,
+    popupEnabled: isStepPopupEnabled(first) || isStepPopupEnabled(second),
+    checks: [
+      ...normalizeStepChecks(first.checks),
+      ...normalizeStepChecks(second.checks)
+    ]
   };
 
   state.previewSteps.splice(firstIndex, 2, mergedStep);
@@ -1034,7 +1178,11 @@ function registerPreviewDevice() {
     sourceType: "Drive PDF",
     updatedAt: "更新情報なし",
     drivePath: `Google Drive / ${state.selectedCategory.name}`,
-    steps: state.previewSteps
+    steps: state.previewSteps.map((step) => ({
+      ...step,
+      popupEnabled: isStepPopupEnabled(step),
+      checks: normalizeStepChecks(step.checks)
+    }))
   };
 
   devices.unshift(device);
@@ -1090,6 +1238,15 @@ function sanitizeSavedDevice(device) {
   if (typeof sanitized.updatedAt !== "string" || sanitized.updatedAt.trim() === "" || /[\ufffd繝蜷縺]/.test(sanitized.updatedAt)) {
     sanitized.updatedAt = "更新情報なし";
   }
+  sanitized.steps = sanitized.steps.map((step) => {
+    const checks = normalizeStepChecks(step.checks);
+    return {
+      ...step,
+      memo: typeof step.memo === "string" ? step.memo : "",
+      popupEnabled: step.popupEnabled === false ? false : checks.length > 0,
+      checks
+    };
+  });
   return sanitized;
 }
 
@@ -1393,14 +1550,46 @@ function saveCurrentSlideTitle() {
 }
 
 function previousStep() {
-  if (state.stepIndex <= 0) return;
-  state.stepIndex -= 1;
-  renderSlide();
+  requestStepChange(state.stepIndex - 1);
 }
 
 function nextStep() {
-  if (state.stepIndex >= state.selectedDevice.steps.length - 1) return;
-  state.stepIndex += 1;
+  requestStepChange(state.stepIndex + 1);
+}
+
+function requestStepChange(targetIndex) {
+  if (!state.selectedDevice) return;
+  if (targetIndex < 0 || targetIndex >= state.selectedDevice.steps.length) {
+    stepSlider.value = String(state.stepIndex);
+    return;
+  }
+
+  if (targetIndex <= state.stepIndex) {
+    applyStepChange(targetIndex);
+    return;
+  }
+
+  const currentStep = state.selectedDevice.steps[state.stepIndex];
+  const checks = normalizeStepChecks(currentStep?.checks);
+  const checkKey = `${state.selectedDevice.id}:${state.stepIndex}`;
+  if (!isStepPopupEnabled(currentStep) || checks.length === 0 || state.confirmedCheckKeys.has(checkKey)) {
+    applyStepChange(targetIndex);
+    return;
+  }
+
+  stepSlider.value = String(state.stepIndex);
+  openCheckModal({
+    title: currentStep.title || `工程${state.stepIndex + 1}`,
+    checks,
+    onConfirm: () => {
+      state.confirmedCheckKeys.add(checkKey);
+      applyStepChange(targetIndex);
+    }
+  });
+}
+
+function applyStepChange(targetIndex) {
+  state.stepIndex = targetIndex;
   renderSlide();
 }
 

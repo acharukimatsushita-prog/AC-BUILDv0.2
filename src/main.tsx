@@ -36,10 +36,18 @@ type TableProbeRow = {
   name: string;
 };
 
+type StepCheck = {
+  id: string;
+  text: string;
+  required?: boolean;
+};
+
 type Step = {
   title: string;
   memo: string;
   image: string;
+  popupEnabled?: boolean;
+  checks?: StepCheck[];
 };
 
 type Device = {
@@ -264,6 +272,38 @@ function AppTopScreen() {
   );
 }
 
+function normalizeChecks(checks: Step["checks"]): StepCheck[] {
+  if (!Array.isArray(checks)) return [];
+  return checks
+    .map((check, index) => ({
+      id: check.id || `check-${index}`,
+      text: check.text.trim(),
+      required: check.required !== false,
+    }))
+    .filter((check) => check.text.length > 0);
+}
+
+function checksToText(checks: Step["checks"]) {
+  return normalizeChecks(checks).map((check) => check.text).join("\n");
+}
+
+function textToChecks(value: string): StepCheck[] {
+  return value
+    .split(/\r?\n/)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map((text, index) => ({
+      id: `check-${Date.now()}-${index}`,
+      text,
+      required: true,
+    }));
+}
+
+function isPopupEnabled(step: Step) {
+  if (step.popupEnabled === true) return true;
+  return normalizeChecks(step.checks).length > 0 && step.popupEnabled !== false;
+}
+
 function DeviceEditView({
   device,
   onCancel,
@@ -274,10 +314,16 @@ function DeviceEditView({
   onSave: (device: Device) => void;
 }) {
   const [title, setTitle] = React.useState(device.name);
-  const [steps, setSteps] = React.useState<Step[]>(device.steps.map(s => ({ ...s })));
+  const [steps, setSteps] = React.useState<Step[]>(
+    device.steps.map((step) => ({
+      ...step,
+      popupEnabled: isPopupEnabled(step),
+      checks: normalizeChecks(step.checks),
+    }))
+  );
 
   const addStep = () => {
-    const newStep: Step = { title: "新しい工程", memo: "", image: "" };
+    const newStep: Step = { title: "新しい工程", memo: "", image: "", popupEnabled: false, checks: [] };
     setSteps([...steps, newStep]);
   };
 
@@ -299,124 +345,157 @@ function DeviceEditView({
     setSteps(newSteps);
   };
 
+  const updatePopupEnabled = (index: number, enabled: boolean) => {
+    const newSteps = [...steps];
+    newSteps[index] = { ...newSteps[index], popupEnabled: enabled };
+    setSteps(newSteps);
+  };
+
+  const updateStepChecks = (index: number, value: string) => {
+    const checks = textToChecks(value);
+    const newSteps = [...steps];
+    newSteps[index] = {
+      ...newSteps[index],
+      checks,
+      popupEnabled: checks.length > 0 ? true : newSteps[index].popupEnabled,
+    };
+    setSteps(newSteps);
+  };
+
   const handleSave = () => {
     onSave({
       ...device,
       name: title,
-      steps,
+      steps: steps.map((step) => ({
+        ...step,
+        popupEnabled: isPopupEnabled(step),
+        checks: normalizeChecks(step.checks),
+      })),
     });
   };
 
   return (
     <main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
-      <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
-        <CardHeader className="p-4 sm:p-5 lg:p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              装置名
-            </label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="rounded-lg"
-            />
+      <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
+        <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">Admin Edit</p>
+            <CardTitle className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+              管理者画面
+            </CardTitle>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              工程タイトル、説明、閲覧時に表示するPOP確認を編集します。
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-5 lg:p-6">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">工程編集</h3>
-              <Button type="button" onClick={addStep} size="sm" className="mb-4">
-                <Layers className="size-4 mr-2" />
-                工程を追加
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {steps.map((step, index) => (
-                <div
-                  key={index}
-                  className="border border-slate-200 rounded-lg p-4 bg-slate-50"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">
-                        工程{index + 1}: タイトル
-                      </label>
-                      <Input
-                        value={step.title}
-                        onChange={(e) => updateStep(index, "title", e.target.value)}
-                        className="rounded-lg mb-3"
-                      />
-                      <label className="block text-xs font-medium text-slate-500 mb-1">
-                        説明
-                      </label>
-                      <textarea
-                        value={step.memo}
-                        onChange={(e) => updateStep(index, "memo", e.target.value)}
-                        className="w-full min-h-16 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-slate-400"
-                      />
-                    </div>
-                    <div className="flex gap-2 ml-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => moveStep(index, -1)}
-                        disabled={index === 0}
-                        title="上に移動"
-                        className="h-10 w-10"
-                      >
-                        <ChevronUp className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => moveStep(index, 1)}
-                        disabled={index === steps.length - 1}
-                        title="下に移動"
-                        className="h-10 w-10"
-                      >
-                        <ChevronDown className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => deleteStep(index)}
-                        className="h-10 w-10 text-red-600 hover:bg-red-50"
-                        title="削除"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="px-4 py-2"
-            >
-              キャンセル
-            </Button>
-            <Button type="button" onClick={handleSave} className="px-4 py-2">
-              <Check className="size-4 mr-2" />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
+            <Button type="button" onClick={handleSave}>
+              <Check className="size-4" aria-hidden="true" />
               保存
             </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-5 p-4 pt-0 sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            装置名
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="min-h-11 rounded-lg" />
+          </label>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-slate-950">工程一覧</h3>
+              <p className="mt-1 text-sm text-slate-600">POP確認をONにすると、閲覧時に次へ進む前の確認画面が表示されます。</p>
+            </div>
+            <Button type="button" onClick={addStep} variant="secondary">
+              <Layers className="size-4" aria-hidden="true" />
+              工程を追加
+            </Button>
+          </div>
+
+          <div className="grid gap-4">
+            {steps.map((step, index) => {
+              const popupEnabled = isPopupEnabled(step);
+              return (
+                <section key={index} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="grid gap-4 lg:grid-cols-[120px_minmax(0,1fr)_minmax(280px,0.9fr)]">
+                    <div className="grid content-start gap-2">
+                      <div className="rounded-lg bg-slate-900 px-3 py-2 text-center text-sm font-bold text-white">
+                        工程 {index + 1}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+                        <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, -1)} disabled={index === 0} title="上に移動">
+                          <ChevronUp className="size-4" aria-hidden="true" />
+                        </Button>
+                        <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title="下に移動">
+                          <ChevronDown className="size-4" aria-hidden="true" />
+                        </Button>
+                        <Button type="button" variant="outline" size="icon" onClick={() => deleteStep(index)} className="text-red-600 hover:bg-red-50" title="削除">
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                        タイトル
+                        <Input value={step.title} onChange={(e) => updateStep(index, "title", e.target.value)} className="min-h-10 rounded-lg bg-white" />
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                        説明
+                        <textarea
+                          value={step.memo}
+                          onChange={(e) => updateStep(index, "memo", e.target.value)}
+                          className="min-h-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-400"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid content-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <label className="flex items-center gap-3 text-sm font-bold text-slate-900">
+                        <input
+                          type="checkbox"
+                          checked={popupEnabled}
+                          onChange={(e) => updatePopupEnabled(index, e.target.checked)}
+                          className="size-5 accent-amber-600"
+                        />
+                        POP確認を表示
+                      </label>
+                      <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                        確認項目（1行1項目）
+                        <textarea
+                          value={checksToText(step.checks)}
+                          onChange={(e) => updateStepChecks(index, e.target.value)}
+                          disabled={!popupEnabled}
+                          placeholder="例: ネジの締め忘れがないか確認した"
+                          className="min-h-28 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-400 disabled:bg-slate-100 disabled:text-slate-400"
+                        />
+                      </label>
+                      <p className="text-xs leading-5 text-slate-600">閲覧時に次の工程へ進む前、ここに入力した項目をチェックするPOPが表示されます。</p>
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-4">
+            <Button type="button" variant="secondary" onClick={addStep}>
+              <Layers className="size-4" aria-hidden="true" />
+              工程を追加
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
+              <Button type="button" onClick={handleSave}>
+                <Check className="size-4" aria-hidden="true" />
+                保存
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
     </main>
   );
 }
-
 function DriveImportView({ isActive }: { isActive: boolean }) {
   return (
     <main
@@ -464,8 +543,7 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
               </label>
               <div className="grid gap-2 sm:min-w-40">
                 <span className="text-sm font-semibold text-slate-700">
-                  状態
-                </span>
+                  迥ｶ諷・                </span>
                 <div
                   className="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-500"
                   id="driveStatus"
@@ -576,7 +654,7 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 </Button>
                 <Button id="autoSplitButton" type="button" className="text-sm">
                   <Sparkles className="size-4" aria-hidden="true" />
-                  自動分割
+                  閾ｪ蜍募・蜑ｲ
                 </Button>
                 <Button id="registerPreviewButton" type="button" variant="secondary" className="text-sm">
                   <ListChecks className="size-4" aria-hidden="true" />
@@ -589,9 +667,9 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 className="setup-note preview-notice mb-3"
                 id="previewNotice"
               >
-                <strong>タイトルは手動編集できます</strong>
+                <strong>タイトルとPOP確認は手動編集できます</strong>
                 <span>
-                  自動分割後、各カードの入力欄で工程タイトルを編集してください。
+                  自動分割後、各カードで工程タイトルと閲覧時のPOP確認を編集してください。
                 </span>
               </div>
               <div
