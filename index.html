@@ -7,27 +7,28 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-badge" aria-hidden="true">AC</div>
+      <div>
+        <p class="eyebrow">Assembly Standard Viewer</p>
+        <h1>AC-BUILD</h1>
+      </div>
+      <div class="topbar-controls">
+        <button class="icon-button" id="backButton" type="button" aria-label="戻る" title="戻る">
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button class="icon-button" id="fullscreenButton" type="button" aria-label="全画面" title="全画面">
+          <span aria-hidden="true">⛶</span>
+        </button>
+      </div>
+    </header>
   <div id="react-root"></div>
   <noscript>
     <div style="padding:16px;font-family:Meiryo,sans-serif;background:#fff3cd;color:#5f4300;">
       JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。
     </div>
   </noscript>
-
-  <div class="app-shell">
-    <header class="topbar">
-      <button class="icon-button" id="backButton" type="button" aria-label="戻る" title="戻る">
-        <span aria-hidden="true">‹</span>
-      </button>
-      <div>
-        <p class="eyebrow">Assembly Standard Viewer</p>
-        <h1>AC-BUILD</h1>
-        <p class="version-label">試作 v0.1 / Google Drive運用モデル</p>
-      </div>
-      <button class="icon-button" id="fullscreenButton" type="button" aria-label="全画面" title="全画面">
-        <span aria-hidden="true">⛶</span>
-      </button>
-    </header>
 
     <main>
       <section class="view is-active" id="deviceView" aria-labelledby="deviceTitle">

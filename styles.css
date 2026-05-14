@@ -47,7 +47,6 @@ button:active {
   min-height: 100vh;
 }
 
-.app-shell > .topbar,
 .app-shell > main > #deviceView,
 .app-shell > main > #driveView {
   display: none !important;
@@ -58,12 +57,38 @@ button:active {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: 52px 1fr 52px;
+  grid-template-columns: 52px 1fr auto;
   align-items: center;
   gap: 12px;
   padding: 14px clamp(14px, 3vw, 28px);
   background: #ffffff;
   border-bottom: 1px solid var(--line);
+}
+
+.topbar > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 52px;
+}
+
+.brand-badge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .topbar h1 {

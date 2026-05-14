@@ -108,62 +108,6 @@ function AppTopScreen() {
   return (
     <>
       <div className="min-h-screen bg-[#f5f7fa] text-[#1b2430]">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-5 lg:px-7">
-          <div className="grid grid-cols-[52px_minmax(0,1fr)_52px_52px] items-center gap-3 sm:grid-cols-[52px_minmax(0,1fr)_52px_52px]">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm font-bold text-slate-900">
-              AC
-            </div>
-
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500">Assembly Standard Viewer</p>
-              <h1 className="truncate text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
-                AC-BUILD
-              </h1>
-              <p className="mt-1 text-xs font-bold text-emerald-700 sm:text-sm">
-                {ja("\u8a66\u4f5c v0.1 / Google Drive\u904b\u7528\u30e2\u30c7\u30eb")}
-              </p>
-              <div
-                id="appStatus"
-                className="mt-2 inline-flex min-h-7 max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-600"
-                data-status="idle"
-              >
-                <span className="size-2 rounded-full bg-slate-400" aria-hidden="true" />
-                <span id="appStatusText" className="truncate">
-                  {ja("\u5f85\u6a5f\u4e2d")}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                id="backButton"
-                type="button"
-                variant="outline"
-                size="icon"
-                className="size-11 rounded-lg sm:size-[52px]"
-                aria-label={ja("\u623b\u308b")}
-                title={ja("\u623b\u308b")}
-                onClick={() => goToView("device")}
-                style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
-              >
-                <ArrowLeft className="size-5" aria-hidden="true" />
-              </Button>
-              <Button
-                id="fullscreenButton"
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label={ja("\u5168\u753b\u9762")}
-                title={ja("\u5168\u753b\u9762")}
-                className="size-11 rounded-lg sm:size-[52px]"
-                onClick={toggleFullscreen}
-              >
-                <Expand className="size-5" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-        </header>
-
         <main className={activeView === "device" ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}>
           <section className="view is-active" id="deviceView" aria-labelledby="deviceTitle">
             <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">

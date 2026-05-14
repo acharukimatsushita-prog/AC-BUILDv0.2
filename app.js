@@ -1548,6 +1548,7 @@ function showView(name) {
   }
   window.scrollTo({ top: 0, left: 0 });
   backButton.style.visibility = name === "device" ? "hidden" : "visible";
+  fullscreenButton.style.visibility = name === "slide" ? "visible" : "hidden";
 }
 
 function renderSlide() {
