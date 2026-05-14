@@ -97,33 +97,22 @@ function AppTopScreen() {
     goToView("device");
   }
 
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+      return;
+    }
+    document.exitFullscreen?.();
+  }
+
   return (
     <>
-      <style>
-        {`
-          .app-shell > .topbar,
-          .app-shell > main > #deviceView,
-          .app-shell > main > #driveView {
-            display: none !important;
-          }
-        `}
-      </style>
       <div className="min-h-screen bg-[#f5f7fa] text-[#1b2430]">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-5 lg:px-7">
-          <div className="grid grid-cols-[44px_1fr_44px] items-center gap-3 sm:grid-cols-[52px_1fr_52px]">
-            <Button
-              id="backButton"
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label={ja("\u623b\u308b")}
-              title={ja("\u623b\u308b")}
-              className="size-11 rounded-lg sm:size-[52px]"
-              onClick={() => goToView("device")}
-              style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
-            >
-              <ArrowLeft className="size-5" aria-hidden="true" />
-            </Button>
+          <div className="grid grid-cols-[52px_minmax(0,1fr)_52px_52px] items-center gap-3 sm:grid-cols-[52px_minmax(0,1fr)_52px_52px]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm font-bold text-slate-900">
+              AC
+            </div>
 
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-500">Assembly Standard Viewer</p>
@@ -145,17 +134,33 @@ function AppTopScreen() {
               </div>
             </div>
 
-            <Button
-              id="fullscreenButton"
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label={ja("\u5168\u753b\u9762")}
-              title={ja("\u5168\u753b\u9762")}
-              className="size-11 rounded-lg sm:size-[52px]"
-            >
-              <Expand className="size-5" aria-hidden="true" />
-            </Button>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                id="backButton"
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-11 rounded-lg sm:size-[52px]"
+                aria-label={ja("\u623b\u308b")}
+                title={ja("\u623b\u308b")}
+                onClick={() => goToView("device")}
+                style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
+              >
+                <ArrowLeft className="size-5" aria-hidden="true" />
+              </Button>
+              <Button
+                id="fullscreenButton"
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={ja("\u5168\u753b\u9762")}
+                title={ja("\u5168\u753b\u9762")}
+                className="size-11 rounded-lg sm:size-[52px]"
+                onClick={toggleFullscreen}
+              >
+                <Expand className="size-5" aria-hidden="true" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -439,10 +444,10 @@ function DeviceEditView({
             </CardTitle>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" className="" onClick={onCancel}>
               {ja("\u623b\u308b")}
             </Button>
-            <Button type="button" onClick={handleSave}>
+            <Button type="button" className="" onClick={handleSave}>
               <Check className="size-4" aria-hidden="true" />
               {ja("\u4fdd\u5b58")}
             </Button>
@@ -461,7 +466,7 @@ function DeviceEditView({
                 {ja("POP\u78ba\u8a8d\u3092ON\u306b\u3059\u308b\u3068\u3001\u95b2\u89a7\u6642\u306b\u6b21\u3078\u9032\u3080\u524d\u306e\u78ba\u8a8d\u753b\u9762\u304c\u8868\u793a\u3055\u308c\u307e\u3059\u3002")}
               </p>
             </div>
-            <Button type="button" onClick={addStep} variant="secondary">
+            <Button type="button" className="" onClick={addStep} variant="secondary">
               <Layers className="size-4" aria-hidden="true" />
               {ja("\u5de5\u7a0b\u3092\u8ffd\u52a0")}
             </Button>
@@ -475,13 +480,13 @@ function DeviceEditView({
                     {ja("\u5de5\u7a0b")} {index + 1}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, -1)} disabled={index === 0} title={ja("\u4e0a\u306b\u79fb\u52d5")}>
+                    <Button type="button" variant="outline" size="icon" className="" onClick={() => moveStep(index, -1)} disabled={index === 0} title={ja("\u4e0a\u306b\u79fb\u52d5")}>
                       <ChevronUp className="size-4" aria-hidden="true" />
                     </Button>
-                    <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title={ja("\u4e0b\u306b\u79fb\u52d5")}>
+                    <Button type="button" variant="outline" size="icon" className="" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title={ja("\u4e0b\u306b\u79fb\u52d5")}>
                       <ChevronDown className="size-4" aria-hidden="true" />
                     </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => deleteStep(index)} disabled={steps.length <= 1}>
+                    <Button type="button" variant="outline" size="sm" className="" onClick={() => deleteStep(index)} disabled={steps.length <= 1}>
                       <Trash2 className="size-4" aria-hidden="true" />
                       {ja("\u524a\u9664")}
                     </Button>
@@ -536,15 +541,15 @@ function DeviceEditView({
           </div>
 
           <div className="flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-4">
-            <Button type="button" variant="secondary" onClick={addStep}>
+            <Button type="button" variant="secondary" className="" onClick={addStep}>
               <Layers className="size-4" aria-hidden="true" />
               {ja("\u5de5\u7a0b\u3092\u8ffd\u52a0")}
             </Button>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" variant="outline" className="" onClick={onCancel}>
                 {ja("\u623b\u308b")}
               </Button>
-              <Button type="button" onClick={handleSave}>
+              <Button type="button" className="" onClick={handleSave}>
                 <Check className="size-4" aria-hidden="true" />
                 {ja("\u4fdd\u5b58")}
               </Button>

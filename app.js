@@ -1542,6 +1542,11 @@ function showView(name) {
   Object.entries(views).forEach(([viewName, element]) => {
     element.classList.toggle("is-active", viewName === name);
   });
+  const reactRoot = document.querySelector("#react-root");
+  if (reactRoot) {
+    reactRoot.hidden = name === "slide";
+  }
+  window.scrollTo({ top: 0, left: 0 });
   backButton.style.visibility = name === "device" ? "hidden" : "visible";
 }
 
