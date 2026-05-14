@@ -73,6 +73,52 @@ button:active {
   font-weight: 800;
 }
 
+#appStatus[data-status="syncing"] {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+#appStatus[data-status="syncing"] span:first-child {
+  background: #2563eb;
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
+#appStatus[data-status="success"] {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+#appStatus[data-status="success"] span:first-child {
+  background: #16a34a;
+}
+
+#appStatus[data-status="warning"],
+#appStatus[data-status="error"] {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+#appStatus[data-status="warning"] span:first-child,
+#appStatus[data-status="error"] span:first-child {
+  background: #d97706;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--muted);

@@ -48,6 +48,8 @@ const manageModeButton = document.querySelector("#manageModeButton");
 const syncDriveButton = document.querySelector("#syncDriveButton");
 const driveFolderInput = document.querySelector("#driveFolderInput");
 const driveStatus = document.querySelector("#driveStatus");
+const appStatus = document.querySelector("#appStatus");
+const appStatusText = document.querySelector("#appStatusText");
 const categoryList = document.querySelector("#categoryList");
 const pdfList = document.querySelector("#pdfList");
 const splitPreviewGrid = document.querySelector("#splitPreviewGrid");
@@ -137,6 +139,7 @@ updateManageModeButton();
 renderDevices();
 renderDriveImport();
 showView("device");
+updateAppStatus("idle", "待機中");
 autoSyncDriveFolder();
 
 function renderDevices() {
@@ -206,6 +209,7 @@ async function syncDriveFolder() {
   if (!folderId) {
     driveStatus.textContent = "URLを確認";
     driveStatus.style.color = "var(--amber)";
+    updateAppStatus("warning", "Drive URLを確認");
     return;
   }
 
@@ -215,12 +219,14 @@ async function syncDriveFolder() {
   if (!config.googleDriveApiKey) {
     driveStatus.textContent = "APIキー未設定";
     driveStatus.style.color = "var(--amber)";
+    updateAppStatus("warning", "Drive APIキー未設定");
     renderDriveImport();
     return;
   }
 
   driveStatus.textContent = "同期中...";
   driveStatus.style.color = "var(--muted)";
+  updateAppStatus("syncing", "Drive同期中...");
   syncDriveButton.disabled = true;
   state.driveSyncInProgress = true;
 
@@ -230,11 +236,13 @@ async function syncDriveFolder() {
     restoreDriveSelection(categories);
     driveStatus.textContent = `同期完了 ${countDriveFiles()}件`;
     driveStatus.style.color = "var(--green)";
+    updateAppStatus("success", `Drive同期完了 ${countDriveFiles()}件`);
     renderDriveImport();
     renderSplitPreview();
   } catch (error) {
     driveStatus.textContent = "同期失敗";
     driveStatus.style.color = "var(--amber)";
+    updateAppStatus("error", "Drive同期失敗");
     splitPreviewGrid.innerHTML = `
       <div class="error-text">
         <strong>蜷梧悄繧ｨ繝ｩ繝ｼ</strong>
@@ -246,6 +254,12 @@ async function syncDriveFolder() {
     syncDriveButton.disabled = false;
     state.driveSyncInProgress = false;
   }
+}
+
+function updateAppStatus(status, text) {
+  if (!appStatus || !appStatusText) return;
+  appStatus.dataset.status = status;
+  appStatusText.textContent = text;
 }
 
 function autoSyncDriveFolder() {

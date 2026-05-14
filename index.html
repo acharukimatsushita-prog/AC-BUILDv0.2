@@ -22,7 +22,7 @@
       <div>
         <p class="eyebrow">Assembly Standard Viewer</p>
         <h1>AC-BUILD</h1>
-        <p class="version-label">試作版 v0.1 / Google Drive運用モデル</p>
+        <p class="version-label">試作 v0.1 / Google Drive運用モデル</p>
       </div>
       <button class="icon-button" id="fullscreenButton" type="button" aria-label="全画面" title="全画面">
         <span aria-hidden="true">⛶</span>
@@ -34,7 +34,7 @@
         <div class="toolbar">
           <div>
             <h2 id="deviceTitle">装置選択</h2>
-            <p>Google Driveで管理している組立標準を選択します。</p>
+            <p>Google Driveで管理している組立標準を選択し、閲覧・取り込みを行います。</p>
           </div>
           <div class="toolbar-actions">
             <button id="exportDevicesButton" type="button">書き出し</button>
@@ -84,8 +84,12 @@
           <section class="drive-preview">
             <div class="preview-head">
               <div>
-                <h3>分割後プレビュー</h3>
+                <h3>分割プレビュー</h3>
                 <p id="previewDeviceName">PDFを選択してください。</p>
+                <label class="compact-select">
+                  <span>登録タイトル</span>
+                  <input id="previewDeviceTitleInput" type="text" placeholder="装置一覧に登録するタイトル">
+                </label>
               </div>
               <div class="preview-actions">
                 <label class="compact-select">
@@ -106,12 +110,12 @@
                 </label>
                 <button id="openPdfButton" type="button">PDF確認</button>
                 <button class="primary-button" id="autoSplitButton" type="button">自動分割</button>
-                <button id="registerPreviewButton" type="button">装置一覧へ追加</button>
+                <button id="registerPreviewButton" type="button">一覧へ追加</button>
               </div>
             </div>
             <div class="setup-note preview-notice" id="previewNotice">
-              <strong>タイトルは手動編集できます</strong>
-              <span>自動分割後、各カードの入力欄で工程タイトルを編集してください。</span>
+              <strong>タイトルとPOP確認を編集できます。</strong>
+              <span>自動分割後、各カードで設定してください。</span>
             </div>
             <div id="splitPreviewGrid" class="split-preview-grid"></div>
           </section>
@@ -152,7 +156,6 @@
           <button id="saveSlideTitleButton" type="button">タイトル保存</button>
         </div>
       </section>
-
     </main>
   </div>
 
