@@ -54,9 +54,10 @@ function AppTopScreen() {
     return () => {
       handlers.forEach((dispose) => dispose());
     };
-  });
+  }, []);
 
   function goToView(name: "device" | "drive") {
+    if (activeView === name) return;
     setActiveView(name);
     switchLegacyView(name);
 
@@ -431,12 +432,11 @@ function bindClick(id: string, handler: () => void) {
 
   const listener = (event: MouseEvent) => {
     event.preventDefault();
-    event.stopImmediatePropagation();
     handler();
   };
 
-  element.addEventListener("click", listener, { capture: true });
-  return () => element.removeEventListener("click", listener, { capture: true });
+  element.addEventListener("click", listener);
+  return () => element.removeEventListener("click", listener);
 }
 
 function callLegacy(name: string) {
