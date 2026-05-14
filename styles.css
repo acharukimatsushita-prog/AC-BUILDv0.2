@@ -388,6 +388,8 @@ h2 {
   height: 100%;
   max-height: none;
   min-height: 0;
+  filter: contrast(1.08) brightness(0.99) saturate(1.04);
+  image-rendering: auto;
 }
 
 :fullscreen .step-card figcaption {

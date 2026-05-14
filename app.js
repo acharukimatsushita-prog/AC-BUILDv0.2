@@ -10,8 +10,8 @@ const PDF_MIME = "application/pdf";
 const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
 const STORAGE_KEY = "ac-builde-drive-settings";
 const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
-const STEP_IMAGE_MAX_SIZE = 960;
-const STEP_IMAGE_QUALITY = 0.66;
+const STEP_IMAGE_MAX_SIZE = 1400;
+const STEP_IMAGE_QUALITY = 0.88;
 const config = window.AC_BUILDE_CONFIG || {};
 const defaultDeviceIds = new Set(devices.map((device) => device.id));
 
@@ -586,7 +586,7 @@ async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal", mergeMode 
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const scale = 1.12;
+    const scale = 1.45;
     const canvas = await renderPdfPage(page, scale);
     const pageSteps = splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode);
     steps.push(...pageSteps);
@@ -888,9 +888,13 @@ function canvasToStepImage(source) {
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.filter = "contrast(1.08) brightness(0.99) saturate(1.03)";
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, width, height);
   context.drawImage(source, 0, 0, width, height);
+  context.filter = "none";
 
   return canvas.toDataURL("image/jpeg", STEP_IMAGE_QUALITY);
 }
