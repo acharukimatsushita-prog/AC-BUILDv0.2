@@ -911,6 +911,18 @@ h2 {
   box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.24);
 }
 
+#react-root #previewDeviceTitleInput {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+#react-root #previewDeviceTitleInput:focus {
+  border-color: #94a3b8;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.24);
+}
+
 #react-root .step-card-actions {
   padding: 0 12px 12px;
 }

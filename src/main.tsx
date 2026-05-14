@@ -314,6 +314,15 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                   >
                     PDFを選択してください。
                   </p>
+                  <label className="mt-4 grid gap-2 text-sm font-semibold text-slate-700">
+                    登録タイトル
+                    <Input
+                      id="previewDeviceTitleInput"
+                      type="text"
+                      className="min-h-10 rounded-lg bg-slate-50"
+                      placeholder="装置一覧に登録するタイトル"
+                    />
+                  </label>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[320px]">
                   <label className="grid gap-1 text-sm font-semibold text-slate-700">

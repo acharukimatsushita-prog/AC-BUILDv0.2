@@ -1,4 +1,4 @@
-const devices = [];
+﻿const devices = [];
 
 const driveRoot = {
   folderId: "1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq",
@@ -10,6 +10,8 @@ const PDF_MIME = "application/pdf";
 const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
 const STORAGE_KEY = "ac-builde-drive-settings";
 const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
+const STEP_IMAGE_MAX_SIZE = 960;
+const STEP_IMAGE_QUALITY = 0.66;
 const config = window.AC_BUILDE_CONFIG || {};
 const defaultDeviceIds = new Set(devices.map((device) => device.id));
 
@@ -47,6 +49,7 @@ const categoryList = document.querySelector("#categoryList");
 const pdfList = document.querySelector("#pdfList");
 const splitPreviewGrid = document.querySelector("#splitPreviewGrid");
 const previewDeviceName = document.querySelector("#previewDeviceName");
+const previewDeviceTitleInput = document.querySelector("#previewDeviceTitleInput");
 const registerPreviewButton = document.querySelector("#registerPreviewButton");
 const openPdfButton = document.querySelector("#openPdfButton");
 const autoSplitButton = document.querySelector("#autoSplitButton");
@@ -144,12 +147,12 @@ function renderDevices() {
       <div class="device-card-body">
         <h3>${device.name}</h3>
         <div class="meta-row">
-          <span>${device.steps.length}工程</span>
-          <span>更新: ${device.updatedAt}</span>
+          <span>${device.steps.length}蟾･遞・/span>
+          <span>譖ｴ譁ｰ: ${device.updatedAt}</span>
         </div>
         <div class="device-actions">
-          <button class="open-device-button" type="button">開く</button>
-          ${canDelete ? '<button class="danger-button delete-device-button" type="button">削除</button>' : ""}
+          <button class="open-device-button" type="button">髢九￥</button>
+          ${canDelete ? '<button class="danger-button delete-device-button" type="button">蜑企勁</button>' : ""}
         </div>
       </div>
     `;
@@ -217,7 +220,7 @@ async function syncDriveFolder() {
     driveStatus.style.color = "var(--amber)";
     splitPreviewGrid.innerHTML = `
       <div class="error-text">
-        <strong>同期エラー</strong>
+        <strong>蜷梧悄繧ｨ繝ｩ繝ｼ</strong>
         <span>${escapeHtml(error.message)}</span>
       </div>
     `;
@@ -232,8 +235,8 @@ function renderDriveImport() {
   if (!config.googleDriveApiKey) {
     categoryList.innerHTML = `
       <div class="setup-note">
-        <strong>APIキーを設定してください</strong>
-        <span>config.js の googleDriveApiKey にGoogle Drive APIキーを入れると、実Driveから同期できます。</span>
+        <strong>API繧ｭ繝ｼ繧定ｨｭ螳壹＠縺ｦ縺上□縺輔＞</strong>
+        <span>config.js 縺ｮ googleDriveApiKey 縺ｫGoogle Drive API繧ｭ繝ｼ繧貞・繧後ｋ縺ｨ縲∝ｮ櫂rive縺九ｉ蜷梧悄縺ｧ縺阪∪縺吶・/span>
       </div>
     `;
   }
@@ -241,8 +244,8 @@ function renderDriveImport() {
   if (driveRoot.categories.length === 0) {
     categoryList.innerHTML = `
       <div class="setup-note">
-        <strong>PDFが見つかりません</strong>
-        <span>Driveフォルダの共有設定、PDFの階層、ショートカット構成を確認してください。</span>
+        <strong>PDF縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ</strong>
+        <span>Drive繝輔か繝ｫ繝縺ｮ蜈ｱ譛芽ｨｭ螳壹￣DF縺ｮ髫主ｱ､縲√す繝ｧ繝ｼ繝医き繝・ヨ讒区・繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・/span>
       </div>
     `;
   }
@@ -267,8 +270,8 @@ function renderDriveImport() {
   if (!state.selectedCategory.files || state.selectedCategory.files.length === 0) {
     pdfList.innerHTML = `
       <div class="setup-note">
-        <strong>この分類にPDFがありません</strong>
-        <span>大分類フォルダの中にPDFがあるか確認してください。</span>
+        <strong>縺薙・蛻・｡槭↓PDF縺後≠繧翫∪縺帙ｓ</strong>
+        <span>螟ｧ蛻・｡槭ヵ繧ｩ繝ｫ繝縺ｮ荳ｭ縺ｫPDF縺後≠繧九°遒ｺ隱阪＠縺ｦ縺上□縺輔＞縲・/span>
       </div>
     `;
   }
@@ -280,7 +283,7 @@ function renderDriveImport() {
     button.classList.toggle("is-selected", state.selectedPdf?.id === file.id);
     button.innerHTML = `
       ${file.name}
-      <small>${file.pages}ページ / ${file.modifiedTime}</small>
+      <small>${file.pages}繝壹・繧ｸ / ${file.modifiedTime}</small>
     `;
     button.addEventListener("click", () => selectDrivePdf(file));
     pdfList.appendChild(button);
@@ -290,6 +293,7 @@ function renderDriveImport() {
 function selectDrivePdf(file) {
   state.selectedPdf = file;
   state.previewSteps = [];
+  updatePreviewDeviceTitle(file.name.replace(/\.pdf$/i, ""));
   saveDriveSettings();
   renderDriveImport();
   renderSplitPreview();
@@ -304,7 +308,7 @@ function toggleManageMode() {
 function updateManageModeButton() {
   manageModeButton.classList.toggle("is-active", state.manageMode);
   manageModeButton.setAttribute("aria-pressed", String(state.manageMode));
-  manageModeButton.textContent = state.manageMode ? "管理モードON" : "管理モード";
+  manageModeButton.textContent = state.manageMode ? "管理ON" : "Manage";
 }
 
 function renderSplitPreview() {
@@ -324,8 +328,8 @@ function renderSplitPreview() {
   if (state.previewSteps.length === 0) {
     splitPreviewGrid.innerHTML = `
       <div class="setup-note">
-        <strong>プレビューはまだありません</strong>
-        <span>自動分割を押すと、PDFから工程プレビューを作成します。</span>
+        <strong>繝励Ξ繝薙Η繝ｼ縺ｯ縺ｾ縺縺ゅｊ縺ｾ縺帙ｓ</strong>
+        <span>閾ｪ蜍募・蜑ｲ繧呈款縺吶→縲￣DF縺九ｉ蟾･遞九・繝ｬ繝薙Η繝ｼ繧剃ｽ懈・縺励∪縺吶・/span>
       </div>
     `;
     return;
@@ -336,14 +340,14 @@ function renderSplitPreview() {
     card.innerHTML = `
       <img src="${step.image}" alt="${step.title}">
       <strong>${step.title}</strong>
-      <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="工程タイトル">
+      <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="蟾･遞九ち繧､繝医Ν">
       <div class="step-card-actions">
-        <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>上へ</button>
-        <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>下へ</button>
-        <button type="button" class="mini-button resplit-step-button">再分割</button>
-        <button type="button" class="mini-button merge-prev-button" ${index === 0 ? "disabled" : ""}>前と結合</button>
-        <button type="button" class="mini-button merge-next-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>次と結合</button>
-        <button type="button" class="mini-button danger-button delete-step-button">削除</button>
+        <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>荳翫∈</button>
+        <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>荳九∈</button>
+        <button type="button" class="mini-button resplit-step-button">蜀榊・蜑ｲ</button>
+        <button type="button" class="mini-button merge-prev-button" ${index === 0 ? "disabled" : ""}>蜑阪→邨仙粋</button>
+        <button type="button" class="mini-button merge-next-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>谺｡縺ｨ邨仙粋</button>
+        <button type="button" class="mini-button danger-button delete-step-button">蜑企勁</button>
       </div>
     `;
     card.addEventListener("click", () => openStepPreview(step));
@@ -443,7 +447,7 @@ async function mergePreviewSteps(firstIndex, secondIndex) {
   const image = await combineStepImages(first.image, second.image);
   const mergedStep = {
     title: first.title,
-    memo: `${first.memo || ""} / ${second.title}と結合`.trim(),
+    memo: `${first.memo || ""} / ${second.title}縺ｨ邨仙粋`.trim(),
     image
   };
 
@@ -466,7 +470,7 @@ function combineStepImages(firstSrc, secondSrc) {
     context.fillStyle = "#dbe2ea";
     context.fillRect(margin, margin + first.naturalHeight + Math.floor(gap / 2), width, 2);
     context.drawImage(second, margin, margin + first.naturalHeight + gap);
-    return canvas.toDataURL("image/png");
+    return canvasToStepImage(canvas);
   });
 }
 
@@ -483,7 +487,7 @@ function openStepPreview(step) {
   modalStepImage.src = step.image;
   modalStepImage.alt = step.title;
   modalStepTitle.textContent = step.title;
-  modalStepMemo.textContent = step.memo || "分割プレビュー";
+  modalStepMemo.textContent = step.memo || "蛻・牡繝励Ξ繝薙Η繝ｼ";
   previewModal.classList.add("is-open");
   previewModal.setAttribute("aria-hidden", "false");
 }
@@ -511,8 +515,8 @@ async function autoSplitSelectedPdf() {
   autoSplitButton.textContent = "分割中...";
   splitPreviewGrid.innerHTML = `
     <div class="setup-note">
-      <strong>PDFを解析中</strong>
-      <span>PDFを画像化して、余白から小工程候補を探しています。</span>
+      <strong>PDF繧定ｧ｣譫蝉ｸｭ</strong>
+      <span>PDF繧堤判蜒丞喧縺励※縲∽ｽ咏區縺九ｉ蟆丞ｷ･遞句呵｣懊ｒ謗｢縺励※縺・∪縺吶・/span>
     </div>
   `;
 
@@ -562,18 +566,18 @@ async function splitPdfIntoSteps(pdfBytes, fileName, mode = "normal", mergeMode 
 
   const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
   const steps = [];
-  const maxPages = Math.min(pdf.numPages, 12);
+  const maxPages = Math.min(pdf.numPages, 10);
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const scale = 1.45;
+    const scale = 1.12;
     const canvas = await renderPdfPage(page, scale);
     const pageSteps = splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode);
     steps.push(...pageSteps);
   }
 
   if (steps.length === 0) {
-    throw new Error("小工程候補を検出できませんでした。PDF確認で内容を確認してください。");
+    throw new Error("工程候補を検出できませんでした。PDFの内容を確認してください。");
   }
 
   return steps.map((step, index) => ({
@@ -624,9 +628,9 @@ function splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode) 
         height: part.height
       };
       steps.push({
-        title: `P${pageNumber} 工程${index + 1}-${partIndex + 1}`,
+        title: `P${pageNumber} 蟾･遞・{index + 1}-${partIndex + 1}`,
         memo: `${fileName} / ${settings.label}`,
-        image: crop.toDataURL("image/png"),
+        image: canvasToStepImage(crop),
         pageNumber,
         bounds
       });
@@ -741,7 +745,7 @@ function normalizeBand(band, direction, width, height) {
 function getSplitSettings(mode, mergeMode = "normal") {
   const settings = {
     normal: {
-      label: "余白自動分割",
+      label: "菴咏區閾ｪ蜍募・蜑ｲ",
       minGap: 34,
       joinGap: 26,
       margin: 16,
@@ -757,7 +761,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 14
     },
     fine: {
-      label: "細分化",
+      label: "邏ｰ蛻・喧",
       minGap: 24,
       joinGap: 14,
       margin: 12,
@@ -773,7 +777,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 10
     },
     extra: {
-      label: "かなり細分化",
+      label: "縺九↑繧顔ｴｰ蛻・喧",
       minGap: 16,
       joinGap: 8,
       margin: 8,
@@ -789,7 +793,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 8
     },
     micro: {
-      label: "再分割",
+      label: "蜀榊・蜑ｲ",
       minGap: 8,
       joinGap: 2,
       margin: 4,
@@ -858,6 +862,23 @@ function cropCanvas(source, x, y, width, height) {
   return canvas;
 }
 
+function canvasToStepImage(source) {
+  const largestSide = Math.max(source.width, source.height);
+  const ratio = largestSide > STEP_IMAGE_MAX_SIZE ? STEP_IMAGE_MAX_SIZE / largestSide : 1;
+  const width = Math.max(1, Math.round(source.width * ratio));
+  const height = Math.max(1, Math.round(source.height * ratio));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(source, 0, 0, width, height);
+
+  return canvas.toDataURL("image/jpeg", STEP_IMAGE_QUALITY);
+}
+
 function splitCanvasByGrid(canvas, sourceStep) {
   const parts = [];
   const isWide = canvas.width / canvas.height > 1.25;
@@ -879,8 +900,8 @@ function splitCanvasByGrid(canvas, sourceStep) {
       const crop = cropCanvas(canvas, x, y, width, height);
       parts.push({
         title: sourceStep.title,
-        memo: `${sourceStep.memo || ""} / グリッド再分割`.trim(),
-        image: crop.toDataURL("image/png"),
+        memo: `${sourceStep.memo || ""} / 繧ｰ繝ｪ繝・ラ蜀榊・蜑ｲ`.trim(),
+        image: canvasToStepImage(crop),
         pageNumber: sourceStep.pageNumber || 1,
         bounds: { x, y, width, height }
       });
@@ -936,7 +957,7 @@ function consolidateSteps(steps, sourceCanvas, settings) {
     return {
       title: group[0].title.replace(/-\d+$/, `-${index + 1}`),
       memo: `${group[0].memo} / 関連断片を統合`,
-      image: crop.toDataURL("image/png"),
+      image: canvasToStepImage(crop),
       pageNumber: group[0].pageNumber,
       bounds
     };
@@ -985,12 +1006,13 @@ function showPreviewError(message) {
 function registerPreviewDevice() {
   if (!state.selectedPdf || state.previewSteps.length === 0) return;
 
-  const name = state.selectedPdf.name.replace(/\.pdf$/i, "");
+  const fallbackName = state.selectedPdf.name.replace(/\.pdf$/i, "");
+  const name = previewDeviceTitleInput?.value.trim() || fallbackName;
   const device = {
     id: `drive-${Date.now()}`,
     name,
     sourceType: "Drive PDF",
-    updatedAt: "プレビュー作成済み",
+    updatedAt: "繝励Ξ繝薙Η繝ｼ菴懈・貂医∩",
     drivePath: `Google Drive / ${state.selectedCategory.name}`,
     steps: state.previewSteps
   };
@@ -1005,6 +1027,11 @@ function registerPreviewDevice() {
   }
   renderDevices();
   openDevice(device);
+}
+
+function updatePreviewDeviceTitle(value) {
+  if (!previewDeviceTitleInput) return;
+  previewDeviceTitleInput.value = value;
 }
 
 function saveDevices() {
@@ -1231,7 +1258,7 @@ async function requestDriveChildren(folderId, useAllDrives) {
     }
 
     if (!response.ok) {
-      const message = data.error?.message || `Google Drive APIの取得に失敗しました。HTTP ${response.status}`;
+      const message = data.error?.message || `Google Drive API縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲・TTP ${response.status}`;
       throw new Error(message);
     }
 
@@ -1270,7 +1297,7 @@ function getDriveItemTargetId(item) {
 }
 
 function formatDriveDate(value) {
-  if (!value) return "更新日不明";
+  if (!value) return "譖ｴ譁ｰ譌･荳肴・";
   return new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
     month: "2-digit",
@@ -1323,7 +1350,7 @@ function saveCurrentSlideTitle() {
   const step = device?.steps[state.stepIndex];
   if (!step) return;
 
-  step.title = slideTitleInput.value.trim() || `工程${state.stepIndex + 1}`;
+  step.title = slideTitleInput.value.trim() || `蟾･遞・{state.stepIndex + 1}`;
   stepTitle.textContent = step.title;
   stepImage.alt = `${device.name} ${step.title}`;
   saveSlideTitleButton.disabled = true;
@@ -1392,3 +1419,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
