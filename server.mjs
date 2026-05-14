@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import OpenAI from "openai";
+import { queryDb } from "./db.mjs";
 
 const port = Number(process.argv[2] || process.env.PORT || 8099);
 const root = process.cwd();
@@ -30,6 +31,11 @@ createServer(async (request, response) => {
     const url = new URL(request.url || "/", `http://localhost:${port}`);
     if (url.pathname === "/api/openai/respond") {
       await handleOpenAIResponse(request, response);
+      return;
+    }
+
+    if (url.pathname === "/api/db/health") {
+      await handleDbHealth(request, response);
       return;
     }
 
@@ -111,6 +117,26 @@ async function handleOpenAIResponse(request, response) {
   } catch (error) {
     sendJson(response, 500, {
       error: error instanceof Error ? error.message : "OpenAI request failed."
+    });
+  }
+}
+
+async function handleDbHealth(request, response) {
+  try {
+    if (request.method !== "GET") {
+      sendJson(response, 405, { error: "Method not allowed." });
+      return;
+    }
+
+    const result = await queryDb("select now() as now");
+    sendJson(response, 200, {
+      ok: true,
+      now: result.rows[0]?.now
+    });
+  } catch (error) {
+    sendJson(response, 500, {
+      ok: false,
+      error: error instanceof Error ? error.message : "Database health check failed."
     });
   }
 }
