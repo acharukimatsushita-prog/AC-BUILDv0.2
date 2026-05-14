@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "api": "node server.mjs",
-    "usage:costs": "node scripts/openai-costs.mjs --once",
-    "usage:watch": "node scripts/openai-costs.mjs --watch",
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1"
