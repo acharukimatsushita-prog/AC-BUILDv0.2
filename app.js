@@ -31,7 +31,9 @@ const state = {
   savedCategoryId: "",
   savedPdfId: "",
   manageMode: false,
-  confirmedCheckKeys: new Set()
+  confirmedCheckKeys: new Set(),
+  driveSyncInProgress: false,
+  driveAutoSynced: false
 };
 
 const deviceGrid = document.querySelector("#deviceGrid");
@@ -135,6 +137,7 @@ updateManageModeButton();
 renderDevices();
 renderDriveImport();
 showView("device");
+autoSyncDriveFolder();
 
 function renderDevices() {
   const query = searchInput.value.trim().toLowerCase();
@@ -197,6 +200,8 @@ function deleteDevice(deviceId) {
 }
 
 async function syncDriveFolder() {
+  if (state.driveSyncInProgress) return;
+
   const folderId = extractDriveFolderId(driveFolderInput.value);
   if (!folderId) {
     driveStatus.textContent = "URLを確認";
@@ -217,6 +222,7 @@ async function syncDriveFolder() {
   driveStatus.textContent = "同期中...";
   driveStatus.style.color = "var(--muted)";
   syncDriveButton.disabled = true;
+  state.driveSyncInProgress = true;
 
   try {
     const categories = await loadDriveCategories(folderId);
@@ -238,7 +244,19 @@ async function syncDriveFolder() {
     console.error(error);
   } finally {
     syncDriveButton.disabled = false;
+    state.driveSyncInProgress = false;
   }
+}
+
+function autoSyncDriveFolder() {
+  if (state.driveAutoSynced) return;
+  if (!config.googleDriveApiKey) return;
+  if (!extractDriveFolderId(driveFolderInput.value)) return;
+
+  state.driveAutoSynced = true;
+  window.setTimeout(() => {
+    syncDriveFolder();
+  }, 0);
 }
 
 function renderDriveImport() {

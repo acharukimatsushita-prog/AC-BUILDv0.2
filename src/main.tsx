@@ -21,12 +21,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import "./styles.css";
@@ -68,48 +63,38 @@ function AppTopScreen() {
   void Select;
 
   React.useEffect(() => {
-    const handlers = [
-      bindClick("backButton", () => {
-        if (activeView === "edit") {
-          goToView("device");
-        } else {
-          goToView("device");
-        }
-      }),
-      bindClick("openDriveButton", () => goToView("drive")),
-      bindClick("fullscreenButton", toggleBrowserFullscreen),
-      bindClick("exportDevicesButton", () => callLegacy("exportDevices")),
-      bindClick("importDevicesButton", () => {
-        document.querySelector<HTMLInputElement>("#react-root #importDevicesInput")?.click();
-      }),
-    ];
-
-    // Expose edit view function to legacy code
     (window as unknown as Record<string, unknown>).goToEditView = (device: Device) => {
       setEditingDevice(device);
       setActiveView("edit");
+      switchLegacyView("device");
     };
 
     return () => {
-      handlers.forEach((dispose) => dispose());
       delete (window as unknown as Record<string, unknown>).goToEditView;
     };
-  }, [activeView]);
+  }, []);
 
-  function goToView(name: "device" | "drive" | "edit", device?: Device) {
-    if (activeView === name && name !== "edit") return;
+  function goToView(name: "device" | "drive") {
     setActiveView(name);
-    if (name === "edit" && device) {
-      setEditingDevice(device);
-    } else if (name !== "edit") {
-      setEditingDevice(null);
-    }
-    switchLegacyView(name === "edit" ? "device" : name);
-
+    setEditingDevice(null);
+    switchLegacyView(name);
     if (name === "device") {
       const legacyRenderDevices = (window as unknown as { renderDevices?: () => void }).renderDevices;
       legacyRenderDevices?.();
     }
+  }
+
+  function saveEditedDevice(updated: Device) {
+    const legacyDevices = (window as unknown as { devices?: Device[] }).devices;
+    const saveDevices = (window as unknown as { saveDevices?: () => void }).saveDevices;
+    if (legacyDevices) {
+      const index = legacyDevices.findIndex((device) => device.id === updated.id);
+      if (index !== -1) {
+        legacyDevices[index] = updated;
+        saveDevices?.();
+      }
+    }
+    goToView("device");
   }
 
   return (
@@ -134,21 +119,13 @@ function AppTopScreen() {
               aria-label="戻る"
               title="戻る"
               className="size-11 rounded-lg sm:size-[52px]"
-              onClick={() => {
-                if (activeView === "edit") {
-                  goToView("device");
-                } else {
-                  goToView("device");
-                }
-              }}
+              onClick={() => goToView("device")}
               style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
             >
               <ArrowLeft className="size-5" aria-hidden="true" />
             </Button>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500">
-                Assembly Standard Viewer
-              </p>
+              <p className="text-xs font-medium text-slate-500">Assembly Standard Viewer</p>
               <h1 className="truncate text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
                 AC-BUILD
               </h1>
@@ -174,17 +151,11 @@ function AppTopScreen() {
           data-react-top-main
           className={activeView === "device" ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}
         >
-          <section
-            className="view is-active"
-            id="deviceView"
-            aria-labelledby="deviceTitle"
-          >
+          <section className="view is-active" id="deviceView" aria-labelledby="deviceTitle">
             <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
               <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-500">
-                    Device Library
-                  </p>
+                  <p className="text-xs font-medium text-slate-500">Device Library</p>
                   <CardTitle
                     id="deviceTitle"
                     className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl"
@@ -204,35 +175,18 @@ function AppTopScreen() {
                     <Import className="size-4" aria-hidden="true" />
                     読み込み
                   </Button>
-                  <Button
-                    id="openDriveButton"
-                    type="button"
-                    onClick={() => goToView("drive")}
-                    className="text-sm"
-                  >
+                  <Button id="openDriveButton" type="button" onClick={() => goToView("drive")} className="text-sm">
                     <FolderSync className="size-4" aria-hidden="true" />
                     Drive同期
                   </Button>
-                  <Button
-                    id="manageModeButton"
-                    type="button"
-                    variant="secondary"
-                    aria-pressed="false"
-                    className="text-sm"
-                  >
+                  <Button id="manageModeButton" type="button" variant="secondary" aria-pressed="false" className="text-sm">
                     <Settings className="size-4" aria-hidden="true" />
                     管理者画面
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
-                <input
-                  id="importDevicesInput"
-                  type="file"
-                  accept=".json,application/json"
-                  hidden
-                />
-
+                <input id="importDevicesInput" type="file" accept=".json,application/json" hidden />
                 <label className="mb-4 flex min-h-12 w-full max-w-2xl items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 focus-within:border-slate-400 focus-within:bg-white">
                   <Search className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   <span className="sr-only">検索</span>
@@ -243,30 +197,16 @@ function AppTopScreen() {
                     className="min-h-11 w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
                   />
                 </label>
-
-                <div
-                  className="device-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
-                  id="deviceGrid"
-                />
+                <div className="device-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" id="deviceGrid" />
               </CardContent>
             </Card>
           </section>
         </main>
+
         <DriveImportView isActive={activeView === "drive"} />
-        {activeView === "edit" && editingDevice && <DeviceEditView device={editingDevice} onCancel={() => {
-          goToView("device");
-        }} onSave={(updated) => {
-          const legacyDevices = (window as unknown as { devices?: Device[] }).devices;
-          if (legacyDevices) {
-            const index = legacyDevices.findIndex(d => d.id === updated.id);
-            if (index !== -1) {
-              legacyDevices[index] = updated;
-              const saveDevices = (window as unknown as { saveDevices?: () => void }).saveDevices;
-              saveDevices?.();
-            }
-          }
-          goToView("device");
-        }} />}
+        {activeView === "edit" && editingDevice && (
+          <DeviceEditView device={editingDevice} onCancel={() => goToView("device")} onSave={saveEditedDevice} />
+        )}
       </div>
     </>
   );
@@ -388,7 +328,9 @@ function DeviceEditView({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              キャンセル
+            </Button>
             <Button type="button" onClick={handleSave}>
               <Check className="size-4" aria-hidden="true" />
               保存
@@ -404,7 +346,9 @@ function DeviceEditView({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-bold text-slate-950">工程一覧</h3>
-              <p className="mt-1 text-sm text-slate-600">POP確認をONにすると、閲覧時に次へ進む前の確認画面が表示されます。</p>
+              <p className="mt-1 text-sm text-slate-600">
+                POP確認をONにすると、閲覧時に次へ進む前の確認画面が表示されます。
+              </p>
             </div>
             <Button type="button" onClick={addStep} variant="secondary">
               <Layers className="size-4" aria-hidden="true" />
@@ -470,7 +414,9 @@ function DeviceEditView({
                           className="min-h-28 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-400 disabled:bg-slate-100 disabled:text-slate-400"
                         />
                       </label>
-                      <p className="text-xs leading-5 text-slate-600">閲覧時に次の工程へ進む前、ここに入力した項目をチェックするPOPが表示されます。</p>
+                      <p className="text-xs leading-5 text-slate-600">
+                        閲覧時に次の工程へ進む前、ここに入力した項目をチェックするPOPが表示されます。
+                      </p>
                     </div>
                   </div>
                 </section>
@@ -484,7 +430,9 @@ function DeviceEditView({
               工程を追加
             </Button>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
+              <Button type="button" variant="outline" onClick={onCancel}>
+                キャンセル
+              </Button>
               <Button type="button" onClick={handleSave}>
                 <Check className="size-4" aria-hidden="true" />
                 保存
@@ -496,28 +444,17 @@ function DeviceEditView({
     </main>
   );
 }
+
 function DriveImportView({ isActive }: { isActive: boolean }) {
   return (
-    <main
-      data-react-drive-main
-      className={isActive ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}
-    >
-      <section
-        className={isActive ? "view is-active" : "view"}
-        id="driveView"
-        aria-labelledby="driveTitle"
-      >
+    <main data-react-drive-main className={isActive ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}>
+      <section className={isActive ? "view is-active" : "view"} id="driveView" aria-labelledby="driveTitle">
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,0.85fr)_minmax(320px,1fr)_minmax(380px,1.35fr)]">
           <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm lg:col-span-3">
             <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">
-                  Drive Import
-                </p>
-                <CardTitle
-                  id="driveTitle"
-                  className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl"
-                >
+                <p className="text-xs font-medium text-slate-500">Drive Import</p>
+                <CardTitle id="driveTitle" className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
                   Google Drive同期
                 </CardTitle>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -531,23 +468,12 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
             </CardHeader>
             <CardContent className="grid gap-3 p-4 pt-0 sm:grid-cols-[1fr_auto] sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
               <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  DriveフォルダURL
-                </span>
-                <Input
-                  id="driveFolderInput"
-                  type="url"
-                  className="min-h-11 rounded-lg bg-slate-50"
-                  placeholder="https://drive.google.com/drive/folders/..."
-                />
+                <span className="text-sm font-semibold text-slate-700">DriveフォルダURL</span>
+                <Input id="driveFolderInput" type="url" className="min-h-11 rounded-lg bg-slate-50" placeholder="https://drive.google.com/drive/folders/..." />
               </label>
               <div className="grid gap-2 sm:min-w-40">
-                <span className="text-sm font-semibold text-slate-700">
-                  迥ｶ諷・                </span>
-                <div
-                  className="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-500"
-                  id="driveStatus"
-                >
+                <span className="text-sm font-semibold text-slate-700">状態</span>
+                <div className="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-500" id="driveStatus">
                   未同期
                 </div>
               </div>
@@ -558,19 +484,12 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
             <CardHeader className="gap-2 p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <Folder className="size-4 text-slate-500" aria-hidden="true" />
-                <CardTitle className="text-base font-bold text-slate-950">
-                  大分類
-                </CardTitle>
+                <CardTitle className="text-base font-bold text-slate-950">大分類</CardTitle>
               </div>
-              <p className="text-sm leading-6 text-slate-600">
-                同期したフォルダ分類を選択します。
-              </p>
+              <p className="text-sm leading-6 text-slate-600">同期したフォルダ分類を選択します。</p>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
-              <div
-                id="categoryList"
-                className="category-list grid max-h-[42vh] gap-2 overflow-auto pr-1 lg:max-h-[58vh]"
-              />
+              <div id="categoryList" className="category-list grid max-h-[42vh] gap-2 overflow-auto pr-1 lg:max-h-[58vh]" />
             </CardContent>
           </Card>
 
@@ -578,19 +497,12 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
             <CardHeader className="gap-2 p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <FileText className="size-4 text-slate-500" aria-hidden="true" />
-                <CardTitle className="text-base font-bold text-slate-950">
-                  装置PDF
-                </CardTitle>
+                <CardTitle className="text-base font-bold text-slate-950">装置PDF</CardTitle>
               </div>
-              <p className="text-sm leading-6 text-slate-600">
-                分割したいPDFを選択します。
-              </p>
+              <p className="text-sm leading-6 text-slate-600">分割したいPDFを選択します。</p>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
-              <div
-                id="pdfList"
-                className="pdf-list grid max-h-[42vh] gap-2 overflow-auto pr-1 lg:max-h-[58vh]"
-              />
+              <div id="pdfList" className="pdf-list grid max-h-[42vh] gap-2 overflow-auto pr-1 lg:max-h-[58vh]" />
             </CardContent>
           </Card>
 
@@ -600,34 +512,18 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Layers className="size-4 text-slate-500" aria-hidden="true" />
-                    <CardTitle className="text-base font-bold text-slate-950">
-                      分割プレビュー
-                    </CardTitle>
+                    <CardTitle className="text-base font-bold text-slate-950">分割プレビュー</CardTitle>
                   </div>
-                  <p
-                    id="previewDeviceName"
-                    className="mt-2 text-sm leading-6 text-slate-600"
-                  >
-                    PDFを選択してください。
-                  </p>
+                  <p id="previewDeviceName" className="mt-2 text-sm leading-6 text-slate-600">PDFを選択してください。</p>
                   <label className="mt-4 grid gap-2 text-sm font-semibold text-slate-700">
                     登録タイトル
-                    <Input
-                      id="previewDeviceTitleInput"
-                      type="text"
-                      className="min-h-10 rounded-lg bg-slate-50"
-                      placeholder="装置一覧に登録するタイトル"
-                    />
+                    <Input id="previewDeviceTitleInput" type="text" className="min-h-10 rounded-lg bg-slate-50" placeholder="装置一覧に登録するタイトル" />
                   </label>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[320px]">
                   <label className="grid gap-1 text-sm font-semibold text-slate-700">
                     分割
-                    <select
-                      id="splitModeSelect"
-                      className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400"
-                      defaultValue="normal"
-                    >
+                    <select id="splitModeSelect" className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400" defaultValue="normal">
                       <option value="normal">標準</option>
                       <option value="fine">細かく</option>
                       <option value="extra">かなり細かく</option>
@@ -635,11 +531,7 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                   </label>
                   <label className="grid gap-1 text-sm font-semibold text-slate-700">
                     まとめ
-                    <select
-                      id="mergeModeSelect"
-                      className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400"
-                      defaultValue="normal"
-                    >
+                    <select id="mergeModeSelect" className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400" defaultValue="normal">
                       <option value="weak">弱</option>
                       <option value="normal">標準</option>
                       <option value="strong">強</option>
@@ -654,7 +546,7 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 </Button>
                 <Button id="autoSplitButton" type="button" className="text-sm">
                   <Sparkles className="size-4" aria-hidden="true" />
-                  閾ｪ蜍募・蜑ｲ
+                  自動分割
                 </Button>
                 <Button id="registerPreviewButton" type="button" variant="secondary" className="text-sm">
                   <ListChecks className="size-4" aria-hidden="true" />
@@ -663,19 +555,11 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
-              <div
-                className="setup-note preview-notice mb-3"
-                id="previewNotice"
-              >
+              <div className="setup-note preview-notice mb-3" id="previewNotice">
                 <strong>タイトルとPOP確認は手動編集できます</strong>
-                <span>
-                  自動分割後、各カードで工程タイトルと閲覧時のPOP確認を編集してください。
-                </span>
+                <span>自動分割後、各カードで工程タイトルと閲覧時のPOP確認を編集してください。</span>
               </div>
-              <div
-                id="splitPreviewGrid"
-                className="split-preview-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-              />
+              <div id="splitPreviewGrid" className="split-preview-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3" />
             </CardContent>
           </Card>
         </div>
@@ -709,38 +593,7 @@ function loadLegacyScript(src: string, onload?: () => void) {
 }
 
 function switchLegacyView(name: "device" | "drive" | "slide") {
-  document
-    .querySelectorAll<HTMLElement>(".app-shell .view")
-    .forEach((view) => {
-      view.classList.toggle("is-active", view.id === `${name}View`);
-    });
-}
-
-function bindClick(id: string, handler: () => void) {
-  const element = document.querySelector<HTMLElement>(`#react-root #${id}`);
-  if (!element) return () => undefined;
-
-  const listener = (event: MouseEvent) => {
-    event.preventDefault();
-    handler();
-  };
-
-  element.addEventListener("click", listener);
-  return () => element.removeEventListener("click", listener);
-}
-
-function callLegacy(name: string) {
-  const action = (window as unknown as Record<string, unknown>)[name];
-  if (typeof action === "function") {
-    action();
-  }
-}
-
-function toggleBrowserFullscreen() {
-  if (document.fullscreenElement) {
-    void document.exitFullscreen();
-    return;
-  }
-
-  void document.documentElement.requestFullscreen?.();
+  document.querySelectorAll<HTMLElement>(".app-shell .view").forEach((view) => {
+    view.classList.toggle("is-active", view.id === `${name}View`);
+  });
 }
