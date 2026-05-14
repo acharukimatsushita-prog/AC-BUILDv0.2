@@ -4,6 +4,9 @@ import { flushSync } from "react-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowLeft,
+  Check,
+  ChevronDown,
+  ChevronUp,
   Expand,
   FileText,
   Folder,
@@ -14,6 +17,7 @@ import {
   Search,
   Settings,
   Sparkles,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,34 +36,67 @@ type TableProbeRow = {
   name: string;
 };
 
+type Step = {
+  title: string;
+  memo: string;
+  image: string;
+};
+
+type Device = {
+  id: string;
+  name: string;
+  sourceType: string;
+  drivePath: string;
+  steps: Step[];
+  updatedAt: string;
+};
+
 const tableProbeColumns: ColumnDef<TableProbeRow>[] = [];
 
 function AppTopScreen() {
-  const [activeView, setActiveView] = React.useState<"device" | "drive">("device");
+  const [activeView, setActiveView] = React.useState<"device" | "drive" | "edit">("device");
+  const [editingDevice, setEditingDevice] = React.useState<Device | null>(null);
   void tableProbeColumns;
   void Select;
 
   React.useEffect(() => {
     const handlers = [
-      bindClick("backButton", () => goToView("device")),
+      bindClick("backButton", () => {
+        if (activeView === "edit") {
+          goToView("device");
+        } else {
+          goToView("device");
+        }
+      }),
       bindClick("openDriveButton", () => goToView("drive")),
       bindClick("fullscreenButton", toggleBrowserFullscreen),
       bindClick("exportDevicesButton", () => callLegacy("exportDevices")),
       bindClick("importDevicesButton", () => {
         document.querySelector<HTMLInputElement>("#react-root #importDevicesInput")?.click();
       }),
-      bindClick("manageModeButton", () => callLegacy("toggleManageMode")),
     ];
+
+    // Expose edit view function to legacy code
+    (window as unknown as Record<string, unknown>).goToEditView = (device: Device) => {
+      setEditingDevice(device);
+      setActiveView("edit");
+    };
 
     return () => {
       handlers.forEach((dispose) => dispose());
+      delete (window as unknown as Record<string, unknown>).goToEditView;
     };
-  }, []);
+  }, [activeView]);
 
-  function goToView(name: "device" | "drive") {
-    if (activeView === name) return;
+  function goToView(name: "device" | "drive" | "edit", device?: Device) {
+    if (activeView === name && name !== "edit") return;
     setActiveView(name);
-    switchLegacyView(name);
+    if (name === "edit" && device) {
+      setEditingDevice(device);
+    } else if (name !== "edit") {
+      setEditingDevice(null);
+    }
+    switchLegacyView(name === "edit" ? "device" : name);
 
     if (name === "device") {
       const legacyRenderDevices = (window as unknown as { renderDevices?: () => void }).renderDevices;
@@ -89,7 +126,13 @@ function AppTopScreen() {
               aria-label="戻る"
               title="戻る"
               className="size-11 rounded-lg sm:size-[52px]"
-              onClick={() => goToView("device")}
+              onClick={() => {
+                if (activeView === "edit") {
+                  goToView("device");
+                } else {
+                  goToView("device");
+                }
+              }}
               style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
             >
               <ArrowLeft className="size-5" aria-hidden="true" />
@@ -145,11 +188,11 @@ function AppTopScreen() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-                  <Button id="exportDevicesButton" type="button" variant="outline">
+                  <Button id="exportDevicesButton" type="button" variant="outline" className="text-sm">
                     <Upload className="size-4" aria-hidden="true" />
                     書き出し
                   </Button>
-                  <Button id="importDevicesButton" type="button" variant="outline">
+                  <Button id="importDevicesButton" type="button" variant="outline" className="text-sm">
                     <Import className="size-4" aria-hidden="true" />
                     読み込み
                   </Button>
@@ -157,6 +200,7 @@ function AppTopScreen() {
                     id="openDriveButton"
                     type="button"
                     onClick={() => goToView("drive")}
+                    className="text-sm"
                   >
                     <FolderSync className="size-4" aria-hidden="true" />
                     Drive同期
@@ -166,9 +210,10 @@ function AppTopScreen() {
                     type="button"
                     variant="secondary"
                     aria-pressed="false"
+                    className="text-sm"
                   >
                     <Settings className="size-4" aria-hidden="true" />
-                    Manage
+                    管理者画面
                   </Button>
                 </div>
               </CardHeader>
@@ -200,8 +245,175 @@ function AppTopScreen() {
           </section>
         </main>
         <DriveImportView isActive={activeView === "drive"} />
+        {activeView === "edit" && editingDevice && <DeviceEditView device={editingDevice} onCancel={() => {
+          goToView("device");
+        }} onSave={(updated) => {
+          const legacyDevices = (window as unknown as { devices?: Device[] }).devices;
+          if (legacyDevices) {
+            const index = legacyDevices.findIndex(d => d.id === updated.id);
+            if (index !== -1) {
+              legacyDevices[index] = updated;
+              const saveDevices = (window as unknown as { saveDevices?: () => void }).saveDevices;
+              saveDevices?.();
+            }
+          }
+          goToView("device");
+        }} />}
       </div>
     </>
+  );
+}
+
+function DeviceEditView({
+  device,
+  onCancel,
+  onSave,
+}: {
+  device: Device;
+  onCancel: () => void;
+  onSave: (device: Device) => void;
+}) {
+  const [title, setTitle] = React.useState(device.name);
+  const [steps, setSteps] = React.useState<Step[]>(device.steps.map(s => ({ ...s })));
+
+  const addStep = () => {
+    const newStep: Step = { title: "新しい工程", memo: "", image: "" };
+    setSteps([...steps, newStep]);
+  };
+
+  const deleteStep = (index: number) => {
+    setSteps(steps.filter((_, i) => i !== index));
+  };
+
+  const moveStep = (index: number, direction: number) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= steps.length) return;
+    const newSteps = [...steps];
+    [newSteps[index], newSteps[newIndex]] = [newSteps[newIndex], newSteps[index]];
+    setSteps(newSteps);
+  };
+
+  const updateStep = (index: number, field: keyof Step, value: string) => {
+    const newSteps = [...steps];
+    newSteps[index] = { ...newSteps[index], [field]: value };
+    setSteps(newSteps);
+  };
+
+  const handleSave = () => {
+    onSave({
+      ...device,
+      name: title,
+      steps,
+    });
+  };
+
+  return (
+    <main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
+      <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+        <CardHeader className="p-4 sm:p-5 lg:p-6">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              装置名
+            </label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="rounded-lg"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 lg:p-6">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">工程編集</h3>
+              <Button type="button" onClick={addStep} size="sm" className="mb-4">
+                <Layers className="size-4 mr-2" />
+                工程を追加
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {steps.map((step, index) => (
+                <div
+                  key={index}
+                  className="border border-slate-200 rounded-lg p-4 bg-slate-50"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1">
+                        工程{index + 1}: タイトル
+                      </label>
+                      <Input
+                        value={step.title}
+                        onChange={(e) => updateStep(index, "title", e.target.value)}
+                        className="rounded-lg mb-3"
+                      />
+                      <label className="block text-xs font-medium text-slate-500 mb-1">
+                        説明
+                      </label>
+                      <textarea
+                        value={step.memo}
+                        onChange={(e) => updateStep(index, "memo", e.target.value)}
+                        className="w-full min-h-16 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-slate-400"
+                      />
+                    </div>
+                    <div className="flex gap-2 ml-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => moveStep(index, -1)}
+                        disabled={index === 0}
+                        title="上に移動"
+                        className="h-10 w-10"
+                      >
+                        <ChevronUp className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => moveStep(index, 1)}
+                        disabled={index === steps.length - 1}
+                        title="下に移動"
+                        className="h-10 w-10"
+                      >
+                        <ChevronDown className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => deleteStep(index)}
+                        className="h-10 w-10 text-red-600 hover:bg-red-50"
+                        title="削除"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="px-4 py-2"
+            >
+              キャンセル
+            </Button>
+            <Button type="button" onClick={handleSave} className="px-4 py-2">
+              <Check className="size-4 mr-2" />
+              保存
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
 
@@ -358,15 +570,15 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <Button id="openPdfButton" type="button" variant="outline">
+                <Button id="openPdfButton" type="button" variant="outline" className="text-sm">
                   <FileText className="size-4" aria-hidden="true" />
                   PDF確認
                 </Button>
-                <Button id="autoSplitButton" type="button">
+                <Button id="autoSplitButton" type="button" className="text-sm">
                   <Sparkles className="size-4" aria-hidden="true" />
                   自動分割
                 </Button>
-                <Button id="registerPreviewButton" type="button" variant="secondary">
+                <Button id="registerPreviewButton" type="button" variant="secondary" className="text-sm">
                   <ListChecks className="size-4" aria-hidden="true" />
                   一覧へ追加
                 </Button>

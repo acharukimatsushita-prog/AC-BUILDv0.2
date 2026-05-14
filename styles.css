@@ -323,7 +323,7 @@ h2 {
 }
 
 .step-edit-panel {
-  display: grid;
+  display: none;
   grid-template-columns: 1fr 128px;
   gap: 12px;
   align-items: end;
@@ -346,6 +346,60 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 8px 10px;
+}
+
+:fullscreen main {
+  padding: 10px 14px;
+}
+
+:fullscreen #slideView.is-active {
+  min-height: calc(100vh - 20px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+:fullscreen .slide-head {
+  margin-bottom: 8px;
+}
+
+:fullscreen .slide-head h2 {
+  margin-bottom: 2px;
+  font-size: clamp(20px, 2vw, 28px);
+}
+
+:fullscreen .step-counter {
+  padding: 7px 10px;
+}
+
+:fullscreen .slide-stage {
+  min-height: 0;
+  align-items: stretch;
+}
+
+:fullscreen .step-card {
+  width: min(100%, 1520px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+:fullscreen .step-card img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+}
+
+:fullscreen .step-card figcaption {
+  padding: 9px 12px;
+}
+
+:fullscreen .bottom-controls {
+  margin-top: 8px;
+}
+
+:fullscreen .bottom-controls button {
+  min-height: 36px;
 }
 
 .import-layout {

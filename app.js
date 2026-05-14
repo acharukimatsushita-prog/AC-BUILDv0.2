@@ -25,7 +25,7 @@ const state = {
   view: "device",
   selectedDevice: devices[0],
   stepIndex: 0,
-  selectedCategory: driveRoot.categories[0],
+  selectedCategory: driveRoot.categories[0] || { id: "", name: "", files: [] },
   selectedPdf: null,
   previewSteps: [],
   savedCategoryId: "",
@@ -142,6 +142,7 @@ function renderDevices() {
     const card = document.createElement("article");
     card.className = "device-card";
     const canDelete = state.manageMode && !defaultDeviceIds.has(device.id);
+    const canEdit = state.manageMode && !defaultDeviceIds.has(device.id);
     card.innerHTML = `
       <div class="device-thumb">${device.sourceType}</div>
       <div class="device-card-body">
@@ -152,11 +153,13 @@ function renderDevices() {
         </div>
         <div class="device-actions">
           <button class="open-device-button" type="button">表示</button>
+          ${canEdit ? '<button class="edit-device-button" type="button" style="background-color: #4b5563; color: white;">編集</button>' : ""}
           ${canDelete ? '<button class="danger-button delete-device-button" type="button">削除</button>' : ""}
         </div>
       </div>
     `;
     card.querySelector(".open-device-button").addEventListener("click", () => openDevice(device));
+    card.querySelector(".edit-device-button")?.addEventListener("click", () => editDevice(device));
     card.querySelector(".delete-device-button")?.addEventListener("click", () => deleteDevice(device.id));
     deviceGrid.appendChild(card);
   });
@@ -167,6 +170,10 @@ function openDevice(device) {
   state.stepIndex = 0;
   showView("slide");
   renderSlide();
+}
+
+function editDevice(device) {
+  window.goToEditView?.(device);
 }
 
 function deleteDevice(deviceId) {
@@ -231,6 +238,10 @@ async function syncDriveFolder() {
 }
 
 function renderDriveImport() {
+  if (!state.selectedCategory) {
+    state.selectedCategory = driveRoot.categories[0] || { id: "", name: "", files: [] };
+  }
+
   categoryList.innerHTML = "";
   if (!config.googleDriveApiKey) {
     categoryList.innerHTML = `
@@ -254,7 +265,7 @@ function renderDriveImport() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "category-button";
-    button.classList.toggle("is-selected", category.id === state.selectedCategory.id);
+    button.classList.toggle("is-selected", category.id === state.selectedCategory?.id);
     button.textContent = `${category.name} (${category.files.length})`;
     button.addEventListener("click", () => {
       state.selectedCategory = category;
@@ -308,8 +319,13 @@ function toggleManageMode() {
 function updateManageModeButton() {
   manageModeButton.classList.toggle("is-active", state.manageMode);
   manageModeButton.setAttribute("aria-pressed", String(state.manageMode));
-  manageModeButton.textContent = state.manageMode ? "管理ON" : "Manage";
+  manageModeButton.textContent = state.manageMode ? "管理者画面ON" : "管理者画面";
 }
+
+window.toggleManageMode = toggleManageMode;
+window.renderDevices = renderDevices;
+window.devices = devices;
+window.saveDevices = saveDevices;
 
 function renderSplitPreview() {
   splitPreviewGrid.innerHTML = "";
