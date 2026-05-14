@@ -59,6 +59,11 @@ function AppTopScreen() {
   function goToView(name: "device" | "drive") {
     setActiveView(name);
     switchLegacyView(name);
+
+    if (name === "device") {
+      const legacyRenderDevices = (window as unknown as { renderDevices?: () => void }).renderDevices;
+      legacyRenderDevices?.();
+    }
   }
 
   return (
@@ -93,7 +98,7 @@ function AppTopScreen() {
                 Assembly Standard Viewer
               </p>
               <h1 className="truncate text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
-                AC-BUILDE
+                AC-BUILD
               </h1>
               <p className="mt-1 text-xs font-bold text-emerald-700 sm:text-sm">
                 試作 v0.1 / Google Drive運用モデル

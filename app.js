@@ -147,12 +147,12 @@ function renderDevices() {
       <div class="device-card-body">
         <h3>${device.name}</h3>
         <div class="meta-row">
-          <span>${device.steps.length}蟾･遞・/span>
-          <span>譖ｴ譁ｰ: ${device.updatedAt}</span>
+          <span>${device.steps.length}工程</span>
+          <span>更新: ${device.updatedAt}</span>
         </div>
         <div class="device-actions">
-          <button class="open-device-button" type="button">髢九￥</button>
-          ${canDelete ? '<button class="danger-button delete-device-button" type="button">蜑企勁</button>' : ""}
+          <button class="open-device-button" type="button">表示</button>
+          ${canDelete ? '<button class="danger-button delete-device-button" type="button">削除</button>' : ""}
         </div>
       </div>
     `;
@@ -235,8 +235,8 @@ function renderDriveImport() {
   if (!config.googleDriveApiKey) {
     categoryList.innerHTML = `
       <div class="setup-note">
-        <strong>API繧ｭ繝ｼ繧定ｨｭ螳壹＠縺ｦ縺上□縺輔＞</strong>
-        <span>config.js 縺ｮ googleDriveApiKey 縺ｫGoogle Drive API繧ｭ繝ｼ繧貞・繧後ｋ縺ｨ縲∝ｮ櫂rive縺九ｉ蜷梧悄縺ｧ縺阪∪縺吶・/span>
+        <strong>APIキーを設定してください</strong>
+        <span>config.js の googleDriveApiKey に Google Drive APIキーを設定すると、Drive同期が行えます。</span>
       </div>
     `;
   }
@@ -244,8 +244,8 @@ function renderDriveImport() {
   if (driveRoot.categories.length === 0) {
     categoryList.innerHTML = `
       <div class="setup-note">
-        <strong>PDF縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ</strong>
-        <span>Drive繝輔か繝ｫ繝縺ｮ蜈ｱ譛芽ｨｭ螳壹￣DF縺ｮ髫主ｱ､縲√す繝ｧ繝ｼ繝医き繝・ヨ讒区・繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・/span>
+        <strong>PDFが見つかりません</strong>
+        <span>Driveフォルダ内にPDFがありません。フォルダURLを確認してから同期してください。</span>
       </div>
     `;
   }
@@ -270,8 +270,8 @@ function renderDriveImport() {
   if (!state.selectedCategory.files || state.selectedCategory.files.length === 0) {
     pdfList.innerHTML = `
       <div class="setup-note">
-        <strong>縺薙・蛻・｡槭↓PDF縺後≠繧翫∪縺帙ｓ</strong>
-        <span>螟ｧ蛻・｡槭ヵ繧ｩ繝ｫ繝縺ｮ荳ｭ縺ｫPDF縺後≠繧九°遒ｺ隱阪＠縺ｦ縺上□縺輔＞縲・/span>
+        <strong>PDFが見つかりません</strong>
+        <span>選択したカテゴリにPDFがありません。Drive同期後にPDFを選択してください。</span>
       </div>
     `;
   }
@@ -328,8 +328,8 @@ function renderSplitPreview() {
   if (state.previewSteps.length === 0) {
     splitPreviewGrid.innerHTML = `
       <div class="setup-note">
-        <strong>繝励Ξ繝薙Η繝ｼ縺ｯ縺ｾ縺縺ゅｊ縺ｾ縺帙ｓ</strong>
-        <span>閾ｪ蜍募・蜑ｲ繧呈款縺吶→縲￣DF縺九ｉ蟾･遞九・繝ｬ繝薙Η繝ｼ繧剃ｽ懈・縺励∪縺吶・/span>
+        <strong>自動分割結果がありません</strong>
+        <span>PDFを選択して「自動分割」を実行してください。</span>
       </div>
     `;
     return;
@@ -340,14 +340,14 @@ function renderSplitPreview() {
     card.innerHTML = `
       <img src="${step.image}" alt="${step.title}">
       <strong>${step.title}</strong>
-      <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="蟾･遞九ち繧､繝医Ν">
+      <input class="split-title-input" type="text" value="${escapeHtml(step.title)}" aria-label="工程タイトル">
       <div class="step-card-actions">
-        <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>荳翫∈</button>
-        <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>荳九∈</button>
-        <button type="button" class="mini-button resplit-step-button">蜀榊・蜑ｲ</button>
-        <button type="button" class="mini-button merge-prev-button" ${index === 0 ? "disabled" : ""}>蜑阪→邨仙粋</button>
-        <button type="button" class="mini-button merge-next-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>谺｡縺ｨ邨仙粋</button>
-        <button type="button" class="mini-button danger-button delete-step-button">蜑企勁</button>
+        <button type="button" class="mini-button move-up-button" ${index === 0 ? "disabled" : ""}>上へ移動</button>
+        <button type="button" class="mini-button move-down-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>下へ移動</button>
+        <button type="button" class="mini-button resplit-step-button">再分割</button>
+        <button type="button" class="mini-button merge-prev-button" ${index === 0 ? "disabled" : ""}>前と結合</button>
+        <button type="button" class="mini-button merge-next-button" ${index === state.previewSteps.length - 1 ? "disabled" : ""}>次と結合</button>
+        <button type="button" class="mini-button danger-button delete-step-button">削除</button>
       </div>
     `;
     card.addEventListener("click", () => openStepPreview(step));
@@ -447,7 +447,7 @@ async function mergePreviewSteps(firstIndex, secondIndex) {
   const image = await combineStepImages(first.image, second.image);
   const mergedStep = {
     title: first.title,
-    memo: `${first.memo || ""} / ${second.title}縺ｨ邨仙粋`.trim(),
+    memo: `${first.memo || ""} / ${second.title}を結合`.trim(),
     image
   };
 
@@ -487,7 +487,7 @@ function openStepPreview(step) {
   modalStepImage.src = step.image;
   modalStepImage.alt = step.title;
   modalStepTitle.textContent = step.title;
-  modalStepMemo.textContent = step.memo || "蛻・牡繝励Ξ繝薙Η繝ｼ";
+  modalStepMemo.textContent = step.memo || "工程メモはありません";
   previewModal.classList.add("is-open");
   previewModal.setAttribute("aria-hidden", "false");
 }
@@ -515,8 +515,8 @@ async function autoSplitSelectedPdf() {
   autoSplitButton.textContent = "分割中...";
   splitPreviewGrid.innerHTML = `
     <div class="setup-note">
-      <strong>PDF繧定ｧ｣譫蝉ｸｭ</strong>
-      <span>PDF繧堤判蜒丞喧縺励※縲∽ｽ咏區縺九ｉ蟆丞ｷ･遞句呵｣懊ｒ謗｢縺励※縺・∪縺吶・/span>
+      <strong>PDFを読み込んでいます</strong>
+      <span>PDFの解析を開始しています。しばらくお待ちください。</span>
     </div>
   `;
 
@@ -628,7 +628,7 @@ function splitCanvasByWhitespace(canvas, pageNumber, fileName, mode, mergeMode) 
         height: part.height
       };
       steps.push({
-        title: `P${pageNumber} 蟾･遞・{index + 1}-${partIndex + 1}`,
+        title: `P${pageNumber} 工程${index + 1}-${partIndex + 1}`,
         memo: `${fileName} / ${settings.label}`,
         image: canvasToStepImage(crop),
         pageNumber,
@@ -745,7 +745,7 @@ function normalizeBand(band, direction, width, height) {
 function getSplitSettings(mode, mergeMode = "normal") {
   const settings = {
     normal: {
-      label: "菴咏區閾ｪ蜍募・蜑ｲ",
+      label: "標準分割",
       minGap: 34,
       joinGap: 26,
       margin: 16,
@@ -761,7 +761,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 14
     },
     fine: {
-      label: "邏ｰ蛻・喧",
+      label: "細かく分割",
       minGap: 24,
       joinGap: 14,
       margin: 12,
@@ -777,7 +777,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 10
     },
     extra: {
-      label: "縺九↑繧顔ｴｰ蛻・喧",
+      label: "かなり細かく分割",
       minGap: 16,
       joinGap: 8,
       margin: 8,
@@ -793,7 +793,7 @@ function getSplitSettings(mode, mergeMode = "normal") {
       groupMargin: 8
     },
     micro: {
-      label: "蜀榊・蜑ｲ",
+      label: "極細分割",
       minGap: 8,
       joinGap: 2,
       margin: 4,
@@ -900,7 +900,7 @@ function splitCanvasByGrid(canvas, sourceStep) {
       const crop = cropCanvas(canvas, x, y, width, height);
       parts.push({
         title: sourceStep.title,
-        memo: `${sourceStep.memo || ""} / 繧ｰ繝ｪ繝・ラ蜀榊・蜑ｲ`.trim(),
+        memo: `${sourceStep.memo || ""} / 再分割`.trim(),
         image: canvasToStepImage(crop),
         pageNumber: sourceStep.pageNumber || 1,
         bounds: { x, y, width, height }
@@ -1012,7 +1012,7 @@ function registerPreviewDevice() {
     id: `drive-${Date.now()}`,
     name,
     sourceType: "Drive PDF",
-    updatedAt: "繝励Ξ繝薙Η繝ｼ菴懈・貂医∩",
+    updatedAt: "更新情報なし",
     drivePath: `Google Drive / ${state.selectedCategory.name}`,
     steps: state.previewSteps
   };
@@ -1056,10 +1056,21 @@ function loadSavedDevices() {
 function loadSavedDeviceData() {
   try {
     const savedDevices = JSON.parse(localStorage.getItem(SAVED_DEVICES_KEY) || "[]");
-    return Array.isArray(savedDevices) ? savedDevices : [];
+    if (!Array.isArray(savedDevices)) return [];
+    return savedDevices
+      .map((device) => (isValidSavedDevice(device) ? sanitizeSavedDevice(device) : null))
+      .filter(Boolean);
   } catch {
     return [];
   }
+}
+
+function sanitizeSavedDevice(device) {
+  const sanitized = { ...device };
+  if (typeof sanitized.updatedAt !== "string" || sanitized.updatedAt.trim() === "" || /[\ufffd繝蜷縺]/.test(sanitized.updatedAt)) {
+    sanitized.updatedAt = "更新情報なし";
+  }
+  return sanitized;
 }
 
 function exportDevices() {
@@ -1097,10 +1108,10 @@ async function importDevices(event) {
     let importedCount = 0;
     importedDevices.forEach((device) => {
       if (!isValidSavedDevice(device)) return;
-      const safeDevice = {
+      const safeDevice = sanitizeSavedDevice({
         ...device,
         id: defaultDeviceIds.has(device.id) ? `drive-${Date.now()}-${importedCount}` : device.id
-      };
+      });
       const existingIndex = devices.findIndex((item) => item.id === safeDevice.id);
       if (existingIndex >= 0 && !defaultDeviceIds.has(safeDevice.id)) {
         devices[existingIndex] = safeDevice;
@@ -1258,7 +1269,7 @@ async function requestDriveChildren(folderId, useAllDrives) {
     }
 
     if (!response.ok) {
-      const message = data.error?.message || `Google Drive API縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲・TTP ${response.status}`;
+      const message = data.error?.message || `Google Drive APIの接続に失敗しました。HTTP ${response.status}`;
       throw new Error(message);
     }
 
@@ -1350,7 +1361,7 @@ function saveCurrentSlideTitle() {
   const step = device?.steps[state.stepIndex];
   if (!step) return;
 
-  step.title = slideTitleInput.value.trim() || `蟾･遞・{state.stepIndex + 1}`;
+  step.title = slideTitleInput.value.trim() || `工程${state.stepIndex + 1}`;
   stepTitle.textContent = step.title;
   stepImage.alt = `${device.name} ${step.title}`;
   saveSlideTitleButton.disabled = true;
