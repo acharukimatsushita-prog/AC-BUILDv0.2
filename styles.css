@@ -697,3 +697,236 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+/* React refresh layer: restyle legacy DOM produced by app.js. */
+#react-root .device-grid,
+#react-root .split-preview-grid {
+  gap: 12px;
+}
+
+#react-root .device-card,
+#react-root .split-preview-card {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+#react-root .device-card:hover,
+#react-root .split-preview-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+
+#react-root .device-card {
+  min-height: 176px;
+  grid-template-rows: 82px 1fr;
+}
+
+#react-root .device-thumb {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(16, 185, 129, 0.12)),
+    radial-gradient(circle at 20% 20%, rgba(19, 104, 184, 0.12), transparent 38%);
+  color: #0f172a;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+#react-root .device-card-body {
+  gap: 12px;
+  padding: 14px;
+}
+
+#react-root .device-card h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+#react-root .meta-row {
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+#react-root .meta-row span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  padding: 0 8px;
+}
+
+#react-root .device-actions,
+#react-root .step-card-actions {
+  gap: 8px;
+}
+
+#react-root .category-button,
+#react-root .pdf-button,
+#react-root .open-device-button,
+#react-root .mini-button,
+#react-root .danger-button {
+  border-radius: 8px;
+  font-weight: 700;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+#react-root .category-button,
+#react-root .pdf-button {
+  min-height: 46px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  padding: 11px 12px;
+  line-height: 1.35;
+}
+
+#react-root .category-button:hover,
+#react-root .pdf-button:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+#react-root .category-button.is-selected,
+#react-root .pdf-button.is-selected {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+}
+
+#react-root .pdf-button small {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+#react-root .pdf-button.is-selected small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+#react-root .open-device-button,
+#react-root #autoSplitButton {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+#react-root .open-device-button:hover,
+#react-root #autoSplitButton:hover {
+  background: #1e293b;
+}
+
+#react-root .danger-button {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+#react-root .danger-button:hover {
+  border-color: #fda4af;
+  background: #ffe4e6;
+}
+
+#react-root .mini-button {
+  min-height: 32px;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+#react-root .mini-button:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+#react-root .mini-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+#react-root #manageModeButton.is-active {
+  border-color: #d97706;
+  background: #d97706;
+  color: #ffffff;
+}
+
+#react-root .setup-note,
+#react-root .error-text {
+  border-color: #fde68a;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  padding: 12px;
+}
+
+#react-root .setup-note strong,
+#react-root .error-text strong {
+  color: #78350f;
+  font-size: 14px;
+}
+
+#react-root .split-preview-card img {
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+    linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+    linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+  background-color: #ffffff;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+#react-root .split-preview-card strong {
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 12px 12px 8px;
+}
+
+#react-root .split-title-input {
+  width: calc(100% - 24px);
+  min-height: 38px;
+  margin: 0 12px 12px;
+  border-color: #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  outline: 0;
+}
+
+#react-root .split-title-input:focus {
+  border-color: #94a3b8;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.24);
+}
+
+#react-root .step-card-actions {
+  padding: 0 12px 12px;
+}
+
+@media (max-width: 640px) {
+  #react-root .device-card {
+    min-height: auto;
+  }
+
+  #react-root .device-actions,
+  #react-root .step-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #react-root .open-device-button {
+    grid-column: 1 / -1;
+  }
+}

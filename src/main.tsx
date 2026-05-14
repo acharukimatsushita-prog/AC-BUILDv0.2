@@ -35,8 +35,31 @@ type TableProbeRow = {
 const tableProbeColumns: ColumnDef<TableProbeRow>[] = [];
 
 function AppTopScreen() {
+  const [activeView, setActiveView] = React.useState<"device" | "drive">("device");
   void tableProbeColumns;
   void Select;
+
+  React.useEffect(() => {
+    const handlers = [
+      bindClick("backButton", () => goToView("device")),
+      bindClick("openDriveButton", () => goToView("drive")),
+      bindClick("fullscreenButton", toggleBrowserFullscreen),
+      bindClick("exportDevicesButton", () => callLegacy("exportDevices")),
+      bindClick("importDevicesButton", () => {
+        document.querySelector<HTMLInputElement>("#react-root #importDevicesInput")?.click();
+      }),
+      bindClick("manageModeButton", () => callLegacy("toggleManageMode")),
+    ];
+
+    return () => {
+      handlers.forEach((dispose) => dispose());
+    };
+  });
+
+  function goToView(name: "device" | "drive") {
+    setActiveView(name);
+    switchLegacyView(name);
+  }
 
   return (
     <>
@@ -46,14 +69,6 @@ function AppTopScreen() {
           .app-shell > main > #deviceView,
           .app-shell > main > #driveView {
             display: none !important;
-          }
-
-          #react-root:has(#deviceView:not(.is-active)) [data-react-top-main] {
-            display: none;
-          }
-
-          #react-root:has(#driveView:not(.is-active)) [data-react-drive-main] {
-            display: none;
           }
         `}
       </style>
@@ -68,6 +83,8 @@ function AppTopScreen() {
               aria-label="戻る"
               title="戻る"
               className="size-11 rounded-lg sm:size-[52px]"
+              onClick={() => goToView("device")}
+              style={{ visibility: activeView === "device" ? "hidden" : "visible" }}
             >
               <ArrowLeft className="size-5" aria-hidden="true" />
             </Button>
@@ -96,7 +113,10 @@ function AppTopScreen() {
           </div>
         </header>
 
-        <main data-react-top-main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
+        <main
+          data-react-top-main
+          className={activeView === "device" ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}
+        >
           <section
             className="view is-active"
             id="deviceView"
@@ -127,7 +147,11 @@ function AppTopScreen() {
                     <Import className="size-4" aria-hidden="true" />
                     読み込み
                   </Button>
-                  <Button id="openDriveButton" type="button">
+                  <Button
+                    id="openDriveButton"
+                    type="button"
+                    onClick={() => goToView("drive")}
+                  >
                     <FolderSync className="size-4" aria-hidden="true" />
                     Drive同期
                   </Button>
@@ -169,16 +193,23 @@ function AppTopScreen() {
             </Card>
           </section>
         </main>
-        <DriveImportView />
+        <DriveImportView isActive={activeView === "drive"} />
       </div>
     </>
   );
 }
 
-function DriveImportView() {
+function DriveImportView({ isActive }: { isActive: boolean }) {
   return (
-    <main data-react-drive-main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
-      <section className="view" id="driveView" aria-labelledby="driveTitle">
+    <main
+      data-react-drive-main
+      className={isActive ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}
+    >
+      <section
+        className={isActive ? "view is-active" : "view"}
+        id="driveView"
+        aria-labelledby="driveTitle"
+      >
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,0.85fr)_minmax(320px,1fr)_minmax(380px,1.35fr)]">
           <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm lg:col-span-3">
             <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
@@ -370,4 +401,42 @@ function loadLegacyScript(src: string, onload?: () => void) {
   script.src = src;
   script.onload = () => onload?.();
   document.body.appendChild(script);
+}
+
+function switchLegacyView(name: "device" | "drive" | "slide") {
+  document
+    .querySelectorAll<HTMLElement>(".app-shell .view")
+    .forEach((view) => {
+      view.classList.toggle("is-active", view.id === `${name}View`);
+    });
+}
+
+function bindClick(id: string, handler: () => void) {
+  const element = document.querySelector<HTMLElement>(`#react-root #${id}`);
+  if (!element) return () => undefined;
+
+  const listener = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    handler();
+  };
+
+  element.addEventListener("click", listener, { capture: true });
+  return () => element.removeEventListener("click", listener, { capture: true });
+}
+
+function callLegacy(name: string) {
+  const action = (window as unknown as Record<string, unknown>)[name];
+  if (typeof action === "function") {
+    action();
+  }
+}
+
+function toggleBrowserFullscreen() {
+  if (document.fullscreenElement) {
+    void document.exitFullscreen();
+    return;
+  }
+
+  void document.documentElement.requestFullscreen?.();
 }
