@@ -1,4 +1,4 @@
-﻿const devices = [];
+const devices = [];
 
 const driveRoot = {
   folderId: "1-2ycWi3ecB0ZCpDWmUjQ27LZV9EUOEJq",
@@ -143,9 +143,11 @@ updateAppStatus("idle", "待機中");
 autoSyncDriveFolder();
 
 function renderDevices() {
+  const grid = document.querySelector("#deviceGrid");
+  if (!grid) return;
   const query = searchInput.value.trim().toLowerCase();
   const filteredDevices = devices.filter((device) => device.name.toLowerCase().includes(query));
-  deviceGrid.innerHTML = "";
+  grid.innerHTML = "";
 
   filteredDevices.forEach((device) => {
     const card = document.createElement("article");

@@ -63,21 +63,43 @@ function AppTopScreen() {
   const [editingDevice, setEditingDevice] = React.useState<Device | null>(null);
 
   React.useEffect(() => {
-    (window as LegacyWindow).goToEditView = (device: Device) => {
+    // Legacy側の「戻る」ボタンクリックをReactの状態にも反映させる
+    const backBtn = document.getElementById("backButton");
+    const handleBack = () => {
+      if (activeView !== "device") {
+        setActiveView("device");
+        setEditingDevice(null);
+        (window as LegacyWindow).renderDevices?.();
+      }
+    };
+    backBtn?.addEventListener("click", handleBack);
+
+    (window as any).goToEditView = (device: Device) => {
       setEditingDevice(device);
       setActiveView("edit");
-      switchLegacyView("device");
+      if (typeof (window as any).showView === "function") {
+        (window as any).showView("device");
+      } else {
+        switchLegacyView("device");
+      }
     };
 
     return () => {
-      delete (window as LegacyWindow).goToEditView;
+      backBtn?.removeEventListener("click", handleBack);
+      delete (window as any).goToEditView;
     };
-  }, []);
+  }, [activeView]);
 
   function goToView(name: "device" | "drive") {
     setActiveView(name);
     setEditingDevice(null);
-    switchLegacyView(name);
+    
+    if (typeof (window as any).showView === "function") {
+      (window as any).showView(name);
+    } else {
+      switchLegacyView(name);
+    }
+
     if (name === "device") {
       (window as LegacyWindow).renderDevices?.();
     }
