@@ -10,14 +10,17 @@ import {
   FileText,
   Folder,
   FolderSync,
+  Globe,
   Import,
   Layers,
   ListChecks,
+  RefreshCw,
   Search,
   Settings,
   Sparkles,
   Trash2,
   Upload,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,25 +62,60 @@ function ja(value: string) {
 }
 
 function AppTopScreen() {
-  const [activeView, setActiveView] = React.useState<"device" | "drive" | "edit">("device");
+  const [activeView, setActiveView] = React.useState<"device" | "drive" | "edit" | "browser">("device");
   const [editingDevice, setEditingDevice] = React.useState<Device | null>(null);
+  const [browserUrl, setBrowserUrl] = React.useState<string>("https://www.google.com");
 
   React.useEffect(() => {
-    (window as LegacyWindow).goToEditView = (device: Device) => {
+    // Legacy側の「戻る」ボタンクリックをReactの状態にも反映させる
+    const backBtn = document.getElementById("backButton");
+    const handleBack = () => {
+      // 現在React管理下の画面（Drive同期や編集画面）にいる場合、装置一覧に戻す
+      if (activeView !== "device") {
+        setActiveView("device");
+        setEditingDevice(null);
+        // renderDevicesを呼び出して一覧を再描画
+        (window as LegacyWindow).renderDevices?.();
+      }
+    };
+    (window as any).openInAppBrowser = (url: string) => {
+      // Google DriveのURLをiframe用に変換 (/view -> /preview)
+      let targetUrl = url;
+      if (targetUrl.includes("drive.google.com") && targetUrl.includes("/view")) {
+        targetUrl = targetUrl.replace("/view", "/preview");
+      }
+      goToView("browser", targetUrl);
+    };
+
+    (window as any).goToEditView = (device: Device) => {
       setEditingDevice(device);
       setActiveView("edit");
-      switchLegacyView("device");
+      // 編集画面自体はReactだが、Legacy側ではdeviceViewをベースに表示を整える
+      if (typeof (window as any).showView === "function") {
+        (window as any).showView("device");
+      } else {
+        switchLegacyView("device");
+      }
     };
 
     return () => {
-      delete (window as LegacyWindow).goToEditView;
+      backBtn?.removeEventListener("click", handleBack);
+      delete (window as any).goToEditView;
     };
-  }, []);
+  }, [activeView]);
 
-  function goToView(name: "device" | "drive") {
+  function goToView(name: "device" | "drive" | "browser", url?: string) {
     setActiveView(name);
     setEditingDevice(null);
-    switchLegacyView(name);
+    if (url) setBrowserUrl(url);
+    
+    // Legacy側の表示状態と同期
+    if (typeof (window as any).showView === "function") {
+      (window as any).showView(name);
+    } else {
+      switchLegacyView(name);
+    }
+
     if (name === "device") {
       (window as LegacyWindow).renderDevices?.();
     }
@@ -134,6 +172,10 @@ function AppTopScreen() {
                     <Settings className="size-4" aria-hidden="true" />
                     {ja("\u7ba1\u7406\u8005\u753b\u9762")}
                   </Button>
+                  <Button id="openBrowserButton" type="button" variant="outline" onClick={() => goToView("browser")}>
+                    <Globe className="size-4" aria-hidden="true" />
+                    {ja("\u30d6\u30e9\u30a6\u30b6")}
+                  </Button>
                   <Button id="openDriveButton" type="button" onClick={() => goToView("drive")}>
                     <FolderSync className="size-4" aria-hidden="true" />
                     {ja("Drive\u540c\u671f")}
@@ -158,7 +200,8 @@ function AppTopScreen() {
           </section>
         </main>
 
-        <DriveImportView isActive={activeView === "drive"} />
+        <DriveImportView isActive={activeView === "drive"} onOpenInBrowser={(url) => goToView("browser", url)} />
+        <SimpleBrowserView isActive={activeView === "browser"} url={browserUrl} setUrl={setBrowserUrl} />
         {activeView === "edit" && editingDevice && (
           <DeviceEditView device={editingDevice} onCancel={() => goToView("device")} onSave={saveEditedDevice} />
         )}
@@ -167,7 +210,7 @@ function AppTopScreen() {
   );
 }
 
-function DriveImportView({ isActive }: { isActive: boolean }) {
+function DriveImportView({ isActive, onOpenInBrowser }: { isActive: boolean; onOpenInBrowser?: (url: string) => void }) {
   return (
     <main className={isActive ? "px-4 py-5 sm:px-6 sm:py-6 lg:px-8" : "hidden"}>
       <section className={isActive ? "view is-active" : "view"} id="driveView" aria-labelledby="driveTitle">
@@ -262,9 +305,14 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <Button id="openPdfButton" type="button" variant="outline">
-                  <FileText className="size-4" aria-hidden="true" />
-                  {ja("PDF\u78ba\u8a8d")}
+                <Button id="openPdfButton" type="button" variant="outline" onClick={() => {
+                  const urlInput = document.getElementById("driveFolderInput") as HTMLInputElement;
+                  if (onOpenInBrowser && urlInput?.value) {
+                    onOpenInBrowser(urlInput.value);
+                  }
+                }}>
+                  <Globe className="size-4" aria-hidden="true" />
+                  {ja("\u30d6\u30e9\u30a6\u30b6\u3067\u958b\u304f")}
                 </Button>
                 <Button id="autoSplitButton" type="button" size="lg">
                   <Sparkles className="size-4" aria-hidden="true" />
@@ -555,6 +603,80 @@ function DeviceEditView({
           </div>
         </CardContent>
       </Card>
+    </main>
+  );
+}
+
+function SimpleBrowserView({ isActive, url, setUrl }: { isActive: boolean; url: string; setUrl: (url: string) => void }) {
+  const [inputUrl, setInputUrl] = React.useState(url);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  React.useEffect(() => {
+    setInputUrl(url);
+  }, [url]);
+
+  const handleGo = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    let target = inputUrl.trim();
+    if (target && !target.startsWith("http")) {
+      target = "https://" + target;
+    }
+    setUrl(target);
+  };
+
+  const handleRefresh = () => {
+    if (iframeRef.current) {
+      const currentSrc = iframeRef.current.src;
+      iframeRef.current.src = "";
+      setTimeout(() => {
+        if (iframeRef.current) iframeRef.current.src = currentSrc;
+      }, 10);
+    }
+  };
+
+  return (
+    <main className={isActive ? "flex h-[calc(100vh-64px)] flex-col bg-white" : "hidden"}>
+      <section className={isActive ? "view is-active flex h-full flex-col" : "view"} id="browserView">
+        <div className="flex items-center gap-2 border-b border-[#c8d4e0] bg-[#f0f4f8] p-2 sm:p-3">
+          <form onSubmit={handleGo} className="flex flex-1 items-center gap-2">
+            <Input
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              className="h-10 flex-1 rounded-md border-[#c8d4e0] bg-white text-sm"
+              placeholder="https://..."
+            />
+            <Button type="submit" size="sm" className="h-10 px-4">
+              Go
+            </Button>
+          </form>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleRefresh} title={ja("\u66f4\u65b0")}>
+              <RefreshCw className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => window.open(url, "_blank")}
+              title={ja("\u65b0\u898f\u30bf\u30d6\u3067\u958b\u304f")}
+            >
+              <ExternalLink className="size-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="relative flex-1 bg-slate-100">
+          <iframe
+            ref={iframeRef}
+            src={url}
+            className="h-full w-full border-none"
+            title="Simple Browser"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          />
+          <div className="absolute bottom-4 right-4 max-w-xs rounded-md bg-black/60 p-2 text-[10px] text-white backdrop-blur-sm">
+            {ja("\u203bX-Frame-Options\u5236\u9650\u306b\u3088\u308a\u8868\u793a\u3067\u304d\u306a\u3044\u30b5\u30a4\u30c8\u304c\u3042\u308a\u307e\u3059\u3002\u305d\u306e\u5834\u5408\u306f\u53f3\u4e0a\u306e\u30a2\u30a4\u30b3\u30f3\u304b\u3089\u5225\u30bf\u30d6\u3067\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002")}
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
