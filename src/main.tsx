@@ -107,49 +107,49 @@ function AppTopScreen() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#f5f7fa] text-[#1b2430]">
-        <main className={activeView === "device" ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}>
+      <div className="min-h-screen bg-[#f0f4f8] text-[#1a2535]">
+        <main className={activeView === "device" ? "px-4 py-5 sm:px-6 sm:py-6 lg:px-8" : "hidden"}>
           <section className="view is-active" id="deviceView" aria-labelledby="deviceTitle">
-            <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
-              <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
+            <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow">
+              <CardHeader className="gap-4 p-5 sm:flex sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-500">Device Library</p>
-                  <CardTitle id="deviceTitle" className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#56687a]">Device Library</p>
+                  <CardTitle id="deviceTitle" className="mt-1 text-2xl font-bold text-[#1a2535] sm:text-3xl">
                     {ja("\u88c5\u7f6e\u9078\u629e")}
                   </CardTitle>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-[#56687a]">
                     {ja("Google Drive\u3067\u7ba1\u7406\u3057\u3066\u3044\u308b\u7d44\u7acb\u6a19\u6e96\u3092\u9078\u629e\u3057\u3001\u95b2\u89a7\u30fb\u53d6\u308a\u8fbc\u307f\u3092\u884c\u3044\u307e\u3059\u3002")}
                   </p>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-cols-4">
-                  <Button id="exportDevicesButton" type="button" variant="outline" className="text-sm">
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Button id="exportDevicesButton" type="button" variant="outline">
                     <Upload className="size-4" aria-hidden="true" />
                     {ja("\u66f8\u304d\u51fa\u3057")}
                   </Button>
-                  <Button id="importDevicesButton" type="button" variant="outline" className="text-sm">
+                  <Button id="importDevicesButton" type="button" variant="outline">
                     <Import className="size-4" aria-hidden="true" />
                     {ja("\u8aad\u307f\u8fbc\u307f")}
                   </Button>
-                  <Button id="openDriveButton" type="button" className="text-sm" onClick={() => goToView("drive")}>
-                    <FolderSync className="size-4" aria-hidden="true" />
-                    {ja("Drive\u540c\u671f")}
-                  </Button>
-                  <Button id="manageModeButton" type="button" variant="secondary" aria-pressed="false" className="text-sm">
+                  <Button id="manageModeButton" type="button" variant="secondary" aria-pressed="false">
                     <Settings className="size-4" aria-hidden="true" />
                     {ja("\u7ba1\u7406\u8005\u753b\u9762")}
                   </Button>
+                  <Button id="openDriveButton" type="button" onClick={() => goToView("drive")}>
+                    <FolderSync className="size-4" aria-hidden="true" />
+                    {ja("Drive\u540c\u671f")}
+                  </Button>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-4 p-4 pt-0 sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
+              <CardContent className="grid gap-4 p-5 pt-0 sm:p-6 sm:pt-0">
                 <input id="importDevicesInput" type="file" accept=".json,application/json" hidden />
-                <label className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 focus-within:border-slate-400">
-                  <Search className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <label className="flex min-h-[52px] items-center gap-3 rounded-lg border border-[#c8d4e0] bg-[#f8fafc] px-4 focus-within:border-[#1568c8] focus-within:ring-2 focus-within:ring-[#1568c8]/20">
+                  <Search className="size-5 shrink-0 text-[#56687a]" aria-hidden="true" />
                   <span className="sr-only">{ja("\u691c\u7d22")}</span>
                   <input
                     id="searchInput"
                     type="search"
                     placeholder={ja("\u88c5\u7f6e\u540d\u3067\u691c\u7d22")}
-                    className="min-h-11 w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                    className="min-h-[48px] w-full bg-transparent text-base outline-none placeholder:text-[#9ab0c8]"
                   />
                 </label>
                 <div className="device-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" id="deviceGrid" />
@@ -169,44 +169,44 @@ function AppTopScreen() {
 
 function DriveImportView({ isActive }: { isActive: boolean }) {
   return (
-    <main className={isActive ? "px-3 py-4 sm:px-5 sm:py-6 lg:px-7" : "hidden"}>
+    <main className={isActive ? "px-4 py-5 sm:px-6 sm:py-6 lg:px-8" : "hidden"}>
       <section className={isActive ? "view is-active" : "view"} id="driveView" aria-labelledby="driveTitle">
         <div className="grid gap-4 lg:grid-cols-[minmax(260px,0.85fr)_minmax(320px,1fr)_minmax(380px,1.35fr)]">
-          <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm lg:col-span-3">
-            <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
+          <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow lg:col-span-3">
+            <CardHeader className="gap-4 p-5 sm:flex sm:flex-row sm:items-center sm:justify-between sm:p-6">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-500">Drive Import</p>
-                <CardTitle id="driveTitle" className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#56687a]">Drive Import</p>
+                <CardTitle id="driveTitle" className="mt-1 text-2xl font-bold text-[#1a2535] sm:text-3xl">
                   {ja("Google Drive\u540c\u671f")}
                 </CardTitle>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-[#56687a]">
                   {ja("Drive\u304b\u3089PDF\u3092\u8aad\u307f\u8fbc\u307f\u3001\u5de5\u7a0b\u30ab\u30fc\u30c9\u3092\u4f5c\u6210\u3057\u307e\u3059\u3002")}
                 </p>
               </div>
-              <Button className="w-full sm:w-auto" id="syncDriveButton" type="button">
-                <FolderSync className="size-4" aria-hidden="true" />
+              <Button className="w-full sm:w-auto" id="syncDriveButton" type="button" size="lg">
+                <FolderSync className="size-5" aria-hidden="true" />
                 {ja("\u540c\u671f")}
               </Button>
             </CardHeader>
-            <CardContent className="grid gap-3 p-4 pt-0 sm:grid-cols-[1fr_auto] sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
+            <CardContent className="grid gap-3 p-5 pt-0 sm:grid-cols-[1fr_auto] sm:p-6 sm:pt-0">
               <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">{ja("Drive\u30d5\u30a9\u30eb\u30c0URL")}</span>
-                <Input id="driveFolderInput" type="url" className="min-h-11 rounded-lg bg-slate-50" placeholder="https://drive.google.com/drive/folders/..." />
+                <span className="text-sm font-bold text-[#1a2535]">{ja("Drive\u30d5\u30a9\u30eb\u30c0URL")}</span>
+                <Input id="driveFolderInput" type="url" className="min-h-[44px] rounded-lg bg-[#f8fafc] text-base" placeholder="https://drive.google.com/drive/folders/..." />
               </label>
               <div className="grid gap-2 sm:min-w-40">
-                <span className="text-sm font-semibold text-slate-700">{ja("\u72b6\u614b")}</span>
-                <div className="flex min-h-11 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-500" id="driveStatus">
+                <span className="text-sm font-bold text-[#1a2535]">{ja("\u72b6\u614b")}</span>
+                <div className="flex min-h-[44px] items-center rounded-lg border border-[#c8d4e0] bg-[#f8fafc] px-3 text-sm font-bold text-[#56687a]" id="driveStatus">
                   {ja("\u672a\u540c\u671f")}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
+          <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow">
             <CardHeader className="gap-2 p-4 sm:p-5">
               <div className="flex items-center gap-2">
-                <Folder className="size-4 text-slate-500" aria-hidden="true" />
-                <CardTitle className="text-base font-bold text-slate-950">{ja("\u5927\u5206\u985e")}</CardTitle>
+                <Folder className="size-5 text-[#1a3660]" aria-hidden="true" />
+                <CardTitle className="text-base font-bold text-[#1a2535]">{ja("\u5927\u5206\u985e")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
@@ -214,11 +214,11 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
             </CardContent>
           </Card>
 
-          <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
+          <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow">
             <CardHeader className="gap-2 p-4 sm:p-5">
               <div className="flex items-center gap-2">
-                <FileText className="size-4 text-slate-500" aria-hidden="true" />
-                <CardTitle className="text-base font-bold text-slate-950">{ja("\u88c5\u7f6ePDF")}</CardTitle>
+                <FileText className="size-5 text-[#1a3660]" aria-hidden="true" />
+                <CardTitle className="text-base font-bold text-[#1a2535]">{ja("\u88c5\u7f6ePDF")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
@@ -226,34 +226,34 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
             </CardContent>
           </Card>
 
-          <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
+          <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow">
             <CardHeader className="gap-4 p-4 sm:p-5">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <Layers className="size-4 text-slate-500" aria-hidden="true" />
-                    <CardTitle className="text-base font-bold text-slate-950">{ja("\u5206\u5272\u30d7\u30ec\u30d3\u30e5\u30fc")}</CardTitle>
+                    <Layers className="size-5 text-[#1a3660]" aria-hidden="true" />
+                    <CardTitle className="text-base font-bold text-[#1a2535]">{ja("\u5206\u5272\u30d7\u30ec\u30d3\u30e5\u30fc")}</CardTitle>
                   </div>
-                  <p id="previewDeviceName" className="mt-2 text-sm leading-6 text-slate-600">
+                  <p id="previewDeviceName" className="mt-2 text-sm leading-6 text-[#56687a]">
                     {ja("PDF\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002")}
                   </p>
-                  <label className="mt-4 grid gap-2 text-sm font-semibold text-slate-700">
+                  <label className="mt-3 grid gap-1 text-sm font-bold text-[#1a2535]">
                     {ja("\u767b\u9332\u30bf\u30a4\u30c8\u30eb")}
-                    <Input id="previewDeviceTitleInput" type="text" className="min-h-10 rounded-lg bg-slate-50" placeholder={ja("\u88c5\u7f6e\u4e00\u89a7\u306b\u767b\u9332\u3059\u308b\u30bf\u30a4\u30c8\u30eb")} />
+                    <Input id="previewDeviceTitleInput" type="text" className="min-h-[42px] rounded-lg bg-[#f8fafc] text-base" placeholder={ja("\u88c5\u7f6e\u4e00\u89a7\u306b\u767b\u9332\u3059\u308b\u30bf\u30a4\u30c8\u30eb")} />
                   </label>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[320px]">
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  <label className="grid gap-1 text-sm font-bold text-[#1a2535]">
                     {ja("\u5206\u5272")}
-                    <select id="splitModeSelect" className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400" defaultValue="normal">
+                    <select id="splitModeSelect" className="min-h-[42px] rounded-md border border-[#c8d4e0] bg-white px-3 text-sm outline-none focus:border-[#1568c8]" defaultValue="normal">
                       <option value="normal">{ja("\u6a19\u6e96")}</option>
                       <option value="fine">{ja("\u7d30\u304b\u304f")}</option>
                       <option value="extra">{ja("\u304b\u306a\u308a\u7d30\u304b\u304f")}</option>
                     </select>
                   </label>
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  <label className="grid gap-1 text-sm font-bold text-[#1a2535]">
                     {ja("\u307e\u3068\u3081")}
-                    <select id="mergeModeSelect" className="min-h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-400" defaultValue="normal">
+                    <select id="mergeModeSelect" className="min-h-[42px] rounded-md border border-[#c8d4e0] bg-white px-3 text-sm outline-none focus:border-[#1568c8]" defaultValue="normal">
                       <option value="weak">{ja("\u5f31")}</option>
                       <option value="normal">{ja("\u6a19\u6e96")}</option>
                       <option value="strong">{ja("\u5f37")}</option>
@@ -262,15 +262,15 @@ function DriveImportView({ isActive }: { isActive: boolean }) {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <Button id="openPdfButton" type="button" variant="outline" className="text-sm">
+                <Button id="openPdfButton" type="button" variant="outline">
                   <FileText className="size-4" aria-hidden="true" />
                   {ja("PDF\u78ba\u8a8d")}
                 </Button>
-                <Button id="autoSplitButton" type="button" className="text-sm">
+                <Button id="autoSplitButton" type="button" size="lg">
                   <Sparkles className="size-4" aria-hidden="true" />
                   {ja("\u81ea\u52d5\u5206\u5272")}
                 </Button>
-                <Button id="registerPreviewButton" type="button" variant="secondary" className="text-sm">
+                <Button id="registerPreviewButton" type="button" variant="secondary">
                   <ListChecks className="size-4" aria-hidden="true" />
                   {ja("\u4e00\u89a7\u3078\u8ffd\u52a0")}
                 </Button>
@@ -422,39 +422,43 @@ function DeviceEditView({
   }
 
   return (
-    <main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
-      <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
-        <CardHeader className="gap-4 p-4 sm:flex sm:flex-row sm:items-end sm:justify-between sm:p-5 lg:p-6">
+    <main className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+      <Card className="rounded-lg border-[#c8d4e0] bg-white py-0 shadow">
+        <CardHeader className="gap-4 p-5 sm:flex sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500">Admin Edit</p>
-            <CardTitle className="mt-1 text-2xl font-bold tracking-normal text-slate-950 sm:text-3xl">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#56687a]">Admin Edit</p>
+            <CardTitle className="mt-1 text-2xl font-bold text-[#1a2535] sm:text-3xl">
               {ja("\u7ba1\u7406\u8005\u7de8\u96c6")}
             </CardTitle>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" className="" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              <ArrowLeft className="size-4" aria-hidden="true" />
               {ja("\u623b\u308b")}
             </Button>
-            <Button type="button" className="" onClick={handleSave}>
+            <Button type="button" size="lg" onClick={handleSave}>
               <Check className="size-4" aria-hidden="true" />
               {ja("\u4fdd\u5b58")}
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-4 p-4 pt-0 sm:p-5 sm:pt-0 lg:p-6 lg:pt-0">
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            {ja("\u88c5\u7f6e\u540d")}
-            <Input value={title} onChange={(event) => setTitle(event.target.value)} className="min-h-11 rounded-lg" />
+        <CardContent className="grid gap-5 p-5 pt-0 sm:p-6 sm:pt-0">
+          <label className="grid gap-2">
+            <span className="text-sm font-bold text-[#1a2535]">
+              {ja("\u88c5\u7f6e\u540d")}
+              <span className="required-badge">必須</span>
+            </span>
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} className="min-h-[44px] rounded-lg text-base" />
           </label>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#c8d4e0] bg-[#f0f4f8] px-4 py-3">
             <div>
-              <h3 className="text-lg font-bold text-slate-950">{ja("\u5de5\u7a0b\u4e00\u89a7")}</h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <h3 className="text-base font-bold text-[#1a2535]">{ja("\u5de5\u7a0b\u4e00\u89a7")}</h3>
+              <p className="mt-1 text-sm text-[#56687a]">
                 {ja("POP\u78ba\u8a8d\u3092ON\u306b\u3059\u308b\u3068\u3001\u95b2\u89a7\u6642\u306b\u6b21\u3078\u9032\u3080\u524d\u306e\u78ba\u8a8d\u753b\u9762\u304c\u8868\u793a\u3055\u308c\u307e\u3059\u3002")}
               </p>
             </div>
-            <Button type="button" className="" onClick={addStep} variant="secondary">
+            <Button type="button" onClick={addStep} variant="secondary">
               <Layers className="size-4" aria-hidden="true" />
               {ja("\u5de5\u7a0b\u3092\u8ffd\u52a0")}
             </Button>
@@ -462,46 +466,51 @@ function DeviceEditView({
 
           <div className="grid gap-3">
             {steps.map((step, index) => (
-              <section key={`${device.id}-${index}`} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <section key={`${device.id}-${index}`} className="rounded-lg border border-[#c8d4e0] bg-[#f8fafc] p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h3 className="text-base font-bold text-slate-950">
-                    {ja("\u5de5\u7a0b")} {index + 1}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#1a3660] text-sm font-bold text-white">
+                      {index + 1}
+                    </span>
+                    <h3 className="text-base font-bold text-[#1a2535]">
+                      {ja("\u5de5\u7a0b")}
+                    </h3>
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="icon" className="" onClick={() => moveStep(index, -1)} disabled={index === 0} title={ja("\u4e0a\u306b\u79fb\u52d5")}>
+                    <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, -1)} disabled={index === 0} title={ja("\u4e0a\u306b\u79fb\u52d5")}>
                       <ChevronUp className="size-4" aria-hidden="true" />
                     </Button>
-                    <Button type="button" variant="outline" size="icon" className="" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title={ja("\u4e0b\u306b\u79fb\u52d5")}>
+                    <Button type="button" variant="outline" size="icon" onClick={() => moveStep(index, 1)} disabled={index === steps.length - 1} title={ja("\u4e0b\u306b\u79fb\u52d5")}>
                       <ChevronDown className="size-4" aria-hidden="true" />
                     </Button>
-                    <Button type="button" variant="outline" size="sm" className="" onClick={() => deleteStep(index)} disabled={steps.length <= 1}>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => deleteStep(index)} disabled={steps.length <= 1}>
                       <Trash2 className="size-4" aria-hidden="true" />
                       {ja("\u524a\u9664")}
                     </Button>
                   </div>
                 </div>
                 <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
-                  <div className="grid gap-2">
-                    <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                      {ja("\u5de5\u7a0b\u30bf\u30a4\u30c8\u30eb")}
+                  <div className="grid gap-3">
+                    <label className="grid gap-1">
+                      <span className="text-sm font-bold text-[#1a2535]">{ja("\u5de5\u7a0b\u30bf\u30a4\u30c8\u30eb")}</span>
                       <Input
                         value={step.title}
                         onChange={(event) => updateStep(index, { ...step, title: event.target.value })}
-                        className="min-h-10 rounded-lg bg-white"
+                        className="min-h-[42px] rounded-lg bg-white text-base"
                       />
                     </label>
-                    <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                      {ja("\u30e1\u30e2")}
+                    <label className="grid gap-1">
+                      <span className="text-sm font-bold text-[#1a2535]">{ja("\u30e1\u30e2")}</span>
                       <textarea
                         value={step.memo}
                         onChange={(event) => updateStep(index, { ...step, memo: event.target.value })}
-                        className="min-h-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-400"
+                        className="min-h-24 rounded-lg border border-[#c8d4e0] bg-white px-3 py-2 text-sm outline-none focus:border-[#1568c8] focus:ring-2 focus:ring-[#1568c8]/20"
                       />
                     </label>
                   </div>
 
-                  <div className="grid content-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <label className="flex items-center gap-3 text-sm font-bold text-slate-900">
+                  <div className="grid content-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                    <label className="flex items-center gap-3 text-sm font-bold text-[#1a2535]">
                       <input
                         type="checkbox"
                         checked={isPopupEnabled(step)}
@@ -510,8 +519,8 @@ function DeviceEditView({
                       />
                       {ja("POP\u78ba\u8a8d\u3092\u8868\u793a")}
                     </label>
-                    <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                      {ja("\u78ba\u8a8d\u9805\u76ee")}
+                    <label className="grid gap-1">
+                      <span className="text-sm font-bold text-[#56687a]">{ja("\u78ba\u8a8d\u9805\u76ee")}</span>
                       <textarea
                         value={checksToText(step.checks)}
                         onChange={(event) => {
@@ -528,16 +537,17 @@ function DeviceEditView({
             ))}
           </div>
 
-          <div className="flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-4">
-            <Button type="button" variant="secondary" className="" onClick={addStep}>
+          <div className="flex flex-wrap justify-between gap-3 border-t border-[#c8d4e0] pt-5">
+            <Button type="button" variant="secondary" onClick={addStep}>
               <Layers className="size-4" aria-hidden="true" />
               {ja("\u5de5\u7a0b\u3092\u8ffd\u52a0")}
             </Button>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="" onClick={onCancel}>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                <ArrowLeft className="size-4" aria-hidden="true" />
                 {ja("\u623b\u308b")}
               </Button>
-              <Button type="button" className="" onClick={handleSave}>
+              <Button type="button" size="lg" onClick={handleSave}>
                 <Check className="size-4" aria-hidden="true" />
                 {ja("\u4fdd\u5b58")}
               </Button>
