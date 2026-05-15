@@ -156,18 +156,36 @@ function renderDevices() {
     const canDelete = state.manageMode && !defaultDeviceIds.has(device.id);
     const canEdit = state.manageMode && !defaultDeviceIds.has(device.id);
     card.innerHTML = `
-      <div class="device-thumb">${device.sourceType}</div>
+      <div class="device-card-header">
+        <span class="device-update-date">${device.updatedAt ? new Date(device.updatedAt).toLocaleDateString() : ja("更新情報なし")}</span>
+      </div>
       <div class="device-card-body">
-        <h3>${device.name}</h3>
-        <div class="meta-row">
-          <span>${device.steps.length}工程</span>
-          <span>更新: ${device.updatedAt}</span>
+        <div class="device-title-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="device-type-icon">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <h3>${device.name}</h3>
         </div>
-        <div class="device-actions">
-          <button class="open-device-button" type="button">表示</button>
-          ${canEdit ? '<button class="edit-device-button" type="button" style="background-color: #4b5563; color: white;">編集</button>' : ""}
-          ${canDelete ? '<button class="danger-button delete-device-button" type="button">削除</button>' : ""}
+        <div class="device-meta">
+          <span class="badge badge-neutral">${device.steps.length}${ja("工程")}</span>
         </div>
+      </div>
+      <div class="device-card-actions">
+        <button class="open-device-button ${canEdit || canDelete ? "has-siblings" : "w-full"}" type="button">${ja("表示")}</button>
+        ${
+          canEdit || canDelete
+            ? `
+          <div class="admin-buttons">
+            ${canEdit ? `<button class="edit-device-button mini-button" type="button">${ja("編集")}</button>` : ""}
+            ${canDelete ? `<button class="delete-device-button danger-button mini-button" type="button">${ja("削除")}</button>` : ""}
+          </div>
+        `
+            : ""
+        }
       </div>
     `;
     card.querySelector(".open-device-button").addEventListener("click", () => openDevice(device));
