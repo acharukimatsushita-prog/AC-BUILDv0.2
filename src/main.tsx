@@ -324,6 +324,44 @@ function isPopupEnabled(step: Step) {
   return normalizeChecks(step.checks).length > 0 && step.popupEnabled !== false;
 }
 
+function repairMojibakeText(value: string) {
+  if (!/[\ufffd繝蜷縺謌讓呎邱髯螟譁陬]/.test(value)) {
+    return value;
+  }
+
+  const replacements: Array<[string, string]> = [
+    ["繝｡繝｢", "メモ"],
+    ["蟾･遞九Γ繝｢", "工程メモ"],
+    ["蟾･遞・", "工程"],
+    ["陬・ｽｮ", "装置"],
+    ["讓呎ｺ・", "標準"],
+    ["邏ｰ縺九￥", "細かく"],
+    ["縺九↑繧顔ｴｰ縺九￥", "かなり細かく"],
+    ["蜷梧悄", "同期"],
+    ["繝壹・繧ｸ", "ページ"],
+    ["蜀榊・蜑ｲ", "再分割"],
+    ["蜀咏悄縺ｮ邨仙粋", "画像の結合"],
+    ["髢｢騾｣譁ｭ迚・ｒ邱ｱ蜷・", "関連断片を統合"],
+    ["蜷医ｒ邨仙粋", "を結合"],
+    ["譁ｰ縺励＞蟾･遞・", "新しい工程"],
+    ["譖ｴ譁ｰ諠・ｱ縺ｪ縺・", "更新情報なし"],
+  ];
+
+  return replacements.reduce((text, [broken, replacement]) => text.split(broken).join(replacement), value);
+}
+
+function repairStepText(step: Step): Step {
+  return {
+    ...step,
+    title: repairMojibakeText(step.title),
+    memo: repairMojibakeText(step.memo),
+    checks: normalizeChecks(step.checks).map((check) => ({
+      ...check,
+      text: repairMojibakeText(check.text),
+    })),
+  };
+}
+
 function DeviceEditView({
   device,
   onCancel,
@@ -333,9 +371,12 @@ function DeviceEditView({
   onCancel: () => void;
   onSave: (device: Device) => void;
 }) {
-  const [title, setTitle] = React.useState(device.name);
+  const [title, setTitle] = React.useState(repairMojibakeText(device.name));
   const [steps, setSteps] = React.useState<Step[]>(
-    device.steps.map((step) => ({ ...step, popupEnabled: isPopupEnabled(step), checks: normalizeChecks(step.checks) }))
+    device.steps.map((step) => {
+      const repairedStep = repairStepText(step);
+      return { ...repairedStep, popupEnabled: isPopupEnabled(repairedStep), checks: normalizeChecks(repairedStep.checks) };
+    })
   );
 
   function addStep() {
@@ -373,7 +414,10 @@ function DeviceEditView({
     onSave({
       ...device,
       name: title.trim() || device.name,
-      steps: steps.map((step) => ({ ...step, popupEnabled: isPopupEnabled(step), checks: normalizeChecks(step.checks) })),
+      steps: steps.map((step) => {
+        const repairedStep = repairStepText(step);
+        return { ...repairedStep, popupEnabled: isPopupEnabled(repairedStep), checks: normalizeChecks(repairedStep.checks) };
+      }),
     });
   }
 

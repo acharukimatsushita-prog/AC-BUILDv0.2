@@ -1267,19 +1267,59 @@ function loadSavedDeviceData() {
 
 function sanitizeSavedDevice(device) {
   const sanitized = { ...device };
+  sanitized.name = repairMojibakeText(typeof sanitized.name === "string" ? sanitized.name : "");
+  sanitized.sourceType = repairMojibakeText(typeof sanitized.sourceType === "string" ? sanitized.sourceType : "");
+  sanitized.drivePath = repairMojibakeText(typeof sanitized.drivePath === "string" ? sanitized.drivePath : "");
   if (typeof sanitized.updatedAt !== "string" || sanitized.updatedAt.trim() === "" || /[\ufffd繝蜷縺]/.test(sanitized.updatedAt)) {
     sanitized.updatedAt = "更新情報なし";
+  } else {
+    sanitized.updatedAt = repairMojibakeText(sanitized.updatedAt);
   }
   sanitized.steps = sanitized.steps.map((step) => {
     const checks = normalizeStepChecks(step.checks);
     return {
       ...step,
-      memo: typeof step.memo === "string" ? step.memo : "",
+      title: repairMojibakeText(typeof step.title === "string" ? step.title : ""),
+      memo: repairMojibakeText(typeof step.memo === "string" ? step.memo : ""),
       popupEnabled: step.popupEnabled === false ? false : checks.length > 0,
-      checks
+      checks: checks.map((check) => ({
+        ...check,
+        text: repairMojibakeText(check.text)
+      }))
     };
   });
   return sanitized;
+}
+
+function repairMojibakeText(value) {
+  if (typeof value !== "string" || !/[\ufffd繝蜷縺謌讓呎邱髯螟譁陬]/.test(value)) {
+    return value;
+  }
+
+  const replacements = new Map([
+    ["繝｡繝｢", "メモ"],
+    ["蟾･遞九Γ繝｢", "工程メモ"],
+    ["蟾･遞・", "工程"],
+    ["陬・ｽｮ", "装置"],
+    ["讓呎ｺ・", "標準"],
+    ["邏ｰ縺九￥", "細かく"],
+    ["縺九↑繧顔ｴｰ縺九￥", "かなり細かく"],
+    ["蜷梧悄", "同期"],
+    ["繝壹・繧ｸ", "ページ"],
+    ["蜀榊・蜑ｲ", "再分割"],
+    ["蜀咏悄縺ｮ邨仙粋", "画像の結合"],
+    ["髢｢騾｣譁ｭ迚・ｒ邱ｱ蜷・", "関連断片を統合"],
+    ["蜷医ｒ邨仙粋", "を結合"],
+    ["譁ｰ縺励＞蟾･遞・", "新しい工程"],
+    ["譖ｴ譁ｰ諠・ｱ縺ｪ縺・", "更新情報なし"]
+  ]);
+
+  let repaired = value;
+  replacements.forEach((replacement, broken) => {
+    repaired = repaired.split(broken).join(replacement);
+  });
+
+  return repaired;
 }
 
 function exportDevices() {
