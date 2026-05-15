@@ -18,7 +18,8 @@ const defaultDeviceIds = new Set(devices.map((device) => device.id));
 const views = {
   device: document.querySelector("#deviceView"),
   slide: document.querySelector("#slideView"),
-  drive: document.querySelector("#driveView")
+  drive: document.querySelector("#driveView"),
+  browser: document.querySelector("#browserView")
 };
 
 const state = {
@@ -693,7 +694,11 @@ function closeStepPreview() {
 
 function openSelectedPdf() {
   if (!state.selectedPdf?.webViewLink) return;
-  window.open(state.selectedPdf.webViewLink, "_blank", "noopener");
+  if (typeof window.openInAppBrowser === "function") {
+    window.openInAppBrowser(state.selectedPdf.webViewLink);
+  } else {
+    window.open(state.selectedPdf.webViewLink, "_blank", "noopener");
+  }
 }
 
 async function autoSplitSelectedPdf() {
@@ -1582,14 +1587,16 @@ function countDriveFiles() {
 function showView(name) {
   state.view = name;
   Object.entries(views).forEach(([viewName, element]) => {
-    element.classList.toggle("is-active", viewName === name);
+    if (element) {
+      element.classList.toggle("is-active", viewName === name);
+    }
   });
   const reactRoot = document.querySelector("#react-root");
   if (reactRoot) {
     reactRoot.hidden = name === "slide";
   }
   window.scrollTo({ top: 0, left: 0 });
-  backButton.style.visibility = name === "device" ? "hidden" : "visible";
+  backButton.style.visibility = (name === "device") ? "hidden" : "visible";
   fullscreenButton.style.visibility = name === "slide" ? "visible" : "hidden";
 }
 
