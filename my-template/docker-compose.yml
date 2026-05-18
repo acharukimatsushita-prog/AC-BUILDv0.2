@@ -1,3 +1,5 @@
+# Prefer root docker-compose.yml for Next.js + FastAPI + PostgreSQL.
+# This file is for template-only runs (web + db).
 services:
   web:
     build: .
@@ -7,9 +9,10 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
+      INTERNAL_API_URL: http://host.docker.internal:8000
+      DATABASE_URL: postgres://postgres:postgres@db:5432/ac_builde
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
-      DATABASE_URL: postgres://postgres:postgres@db:5432/my_app
     depends_on:
       db:
         condition: service_healthy
@@ -17,15 +20,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: my_app
+      POSTGRES_DB: ac_builde
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d my_app"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ac_builde"]
       interval: 5s
       timeout: 5s
       retries: 10

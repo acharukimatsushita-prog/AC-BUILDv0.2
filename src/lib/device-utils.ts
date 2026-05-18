@@ -1,4 +1,4 @@
-﻿import { Step, StepCheck } from "@/types";
+﻿import type { Step, StepCheck } from "@/types";
 
 export function normalizeChecks(checks?: Step["checks"]): StepCheck[] {
   if (!Array.isArray(checks)) return [];

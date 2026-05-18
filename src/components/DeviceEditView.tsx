@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, Check, Layers, Trash2 } from "lucide-react";
-import { Device, Step } from "@/types";
+import type { Device, Step } from "@/types";
 import { checksToText, isPopupEnabled, normalizeChecks, repairMojibakeText, repairStepText, textToChecks } from "@/lib/device-utils";
 
 export function DeviceEditView({

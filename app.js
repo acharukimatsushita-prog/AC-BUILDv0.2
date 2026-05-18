@@ -10,18 +10,28 @@ const PDF_MIME = "application/pdf";
 const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
 const STORAGE_KEY = "ac-builde-drive-settings";
 const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
-const STEP_IMAGE_MAX_SIZE = 1400;
-const STEP_IMAGE_QUALITY = 0.88;
+const DB_NAME = "AC_BUILDE_DB";
+const DB_VERSION = 1;
+const STORE_NAME = "devices";
+
 const config = window.AC_BUILDE_CONFIG || {};
+const ja = (value) => value;
 const defaultDeviceIds = new Set(devices.map((device) => device.id));
 
-const views = {
-  device: document.querySelector("#deviceView"),
-  slide: document.querySelector("#slideView"),
-  drive: document.querySelector("#driveView"),
-  browser: document.querySelector("#browserView")
-};
-
+/** IndexedDB helper */
+function getDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
 const state = {
   view: "device",
   selectedDevice: devices[0],
@@ -37,79 +47,99 @@ const state = {
   driveAutoSynced: false
 };
 
-const deviceGrid = document.querySelector("#deviceGrid");
-const searchInput = document.querySelector("#searchInput");
-const backButton = document.querySelector("#backButton");
-const fullscreenButton = document.querySelector("#fullscreenButton");
-const exportDevicesButton = document.querySelector("#exportDevicesButton");
-const importDevicesButton = document.querySelector("#importDevicesButton");
-const importDevicesInput = document.querySelector("#importDevicesInput");
-const openDriveButton = document.querySelector("#openDriveButton");
-const manageModeButton = document.querySelector("#manageModeButton");
-const syncDriveButton = document.querySelector("#syncDriveButton");
-const driveFolderInput = document.querySelector("#driveFolderInput");
-const driveStatus = document.querySelector("#driveStatus");
-const appStatus = document.querySelector("#appStatus");
-const appStatusText = document.querySelector("#appStatusText");
-const categoryList = document.querySelector("#categoryList");
-const pdfList = document.querySelector("#pdfList");
-const splitPreviewGrid = document.querySelector("#splitPreviewGrid");
-const previewDeviceName = document.querySelector("#previewDeviceName");
-const previewDeviceTitleInput = document.querySelector("#previewDeviceTitleInput");
-const registerPreviewButton = document.querySelector("#registerPreviewButton");
-const openPdfButton = document.querySelector("#openPdfButton");
-const autoSplitButton = document.querySelector("#autoSplitButton");
-const splitModeSelect = document.querySelector("#splitModeSelect");
-const mergeModeSelect = document.querySelector("#mergeModeSelect");
-const previewModal = document.querySelector("#previewModal");
-const previewModalBackdrop = document.querySelector("#previewModalBackdrop");
-const closePreviewModal = document.querySelector("#closePreviewModal");
-const modalStepImage = document.querySelector("#modalStepImage");
-const modalStepTitle = document.querySelector("#modalStepTitle");
-const modalStepMemo = document.querySelector("#modalStepMemo");
-const slideDeviceName = document.querySelector("#slideDeviceName");
-const slideSource = document.querySelector("#slideSource");
-const stepCounter = document.querySelector("#stepCounter");
-const stepImage = document.querySelector("#stepImage");
-const stepTitle = document.querySelector("#stepTitle");
-const stepMemo = document.querySelector("#stepMemo");
-const stepSlider = document.querySelector("#stepSlider");
-const slideTitleInput = document.querySelector("#slideTitleInput");
-const saveSlideTitleButton = document.querySelector("#saveSlideTitleButton");
+function getView(name) {
+  return document.getElementById(`${name}View`);
+}
 
-document.querySelector("#prevButton").addEventListener("click", previousStep);
-document.querySelector("#nextButton").addEventListener("click", nextStep);
-document.querySelector("#prevControl").addEventListener("click", previousStep);
-document.querySelector("#nextControl").addEventListener("click", nextStep);
-stepSlider.addEventListener("input", (event) => {
-  requestStepChange(Number(event.target.value));
-});
+function showView(name) {
+  state.view = name;
+  ["device", "slide", "drive", "browser"].forEach((viewName) => {
+    const el = getView(viewName);
+    if (el) {
+      el.classList.toggle("is-active", viewName === name);
+    }
+  });
+  const reactRoot = document.getElementById("react-root");
+  if (reactRoot) {
+    reactRoot.hidden = name === "slide";
+  }
+  window.scrollTo({ top: 0, left: 0 });
+  
+  const backBtn = document.getElementById("backButton");
+  if (backBtn) {
+    backBtn.style.visibility = (name === "device") ? "hidden" : "visible";
+  }
+  
+  const fullscreenBtn = document.getElementById("fullscreenButton");
+  if (fullscreenBtn) {
+    fullscreenBtn.style.visibility = name === "slide" ? "visible" : "hidden";
+  }
+}
 
-searchInput.addEventListener("input", renderDevices);
-exportDevicesButton.addEventListener("click", exportDevices);
-importDevicesButton.addEventListener("click", () => importDevicesInput.click());
-importDevicesInput.addEventListener("change", importDevices);
-backButton.addEventListener("click", () => {
-  if (state.view === "device") return;
-  showView("device");
-});
+function attachListeners() {
+  const safeAddListener = (id, event, handler) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+    else console.warn(`Element #${id} not found for ${event} listener`);
+  };
 
-openDriveButton.addEventListener("click", () => {
-  showView("drive");
-  renderDriveImport();
-});
-manageModeButton.addEventListener("click", toggleManageMode);
-syncDriveButton.addEventListener("click", syncDriveFolder);
-registerPreviewButton.addEventListener("click", registerPreviewDevice);
-openPdfButton.addEventListener("click", openSelectedPdf);
-autoSplitButton.addEventListener("click", autoSplitSelectedPdf);
-previewModalBackdrop.addEventListener("click", closeStepPreview);
-closePreviewModal.addEventListener("click", closeStepPreview);
-fullscreenButton.addEventListener("click", toggleFullscreen);
-saveSlideTitleButton.addEventListener("click", saveCurrentSlideTitle);
-slideTitleInput.addEventListener("input", () => {
-  saveSlideTitleButton.disabled = false;
-});
+  safeAddListener("prevButton", "click", previousStep);
+  safeAddListener("nextButton", "click", nextStep);
+  safeAddListener("prevControl", "click", previousStep);
+  safeAddListener("nextControl", "click", nextStep);
+  
+  const stepSlider = document.getElementById("stepSlider");
+  if (stepSlider) {
+    stepSlider.addEventListener("input", (event) => {
+      requestStepChange(Number(event.target.value));
+    });
+  }
+
+  safeAddListener("searchInput", "input", renderDevices);
+  safeAddListener("exportDevicesButton", "click", exportDevices);
+  
+  const importBtn = document.getElementById("importDevicesButton");
+  if (importBtn) {
+    importBtn.addEventListener("click", () => {
+      document.getElementById("importDevicesInput")?.click();
+    });
+  }
+  
+  safeAddListener("importDevicesInput", "change", importDevices);
+  
+  const backBtn = document.getElementById("backButton");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      if (state.view === "device") return;
+      showView("device");
+    });
+  }
+
+  safeAddListener("openDriveButton", "click", () => {
+    showView("drive");
+    renderDriveImport();
+  });
+  
+  safeAddListener("manageModeButton", "click", toggleManageMode);
+  safeAddListener("syncDriveButton", "click", syncDriveFolder);
+  safeAddListener("registerPreviewButton", "click", registerPreviewDevice);
+  safeAddListener("openPdfButton", "click", openSelectedPdf);
+  safeAddListener("autoSplitButton", "click", autoSplitSelectedPdf);
+  safeAddListener("previewModalBackdrop", "click", closeStepPreview);
+  safeAddListener("closePreviewModal", "click", closeStepPreview);
+  safeAddListener("fullscreenButton", "click", toggleFullscreen);
+  safeAddListener("saveSlideTitleButton", "click", saveCurrentSlideTitle);
+  
+  const slideTitleInput = document.getElementById("slideTitleInput");
+  if (slideTitleInput) {
+    slideTitleInput.addEventListener("input", () => {
+      const btn = document.getElementById("saveSlideTitleButton");
+      if (btn) btn.disabled = false;
+    });
+  }
+}
+
+attachListeners();
 
 document.addEventListener("keydown", (event) => {
   if (state.view !== "slide") return;
@@ -134,19 +164,57 @@ document.querySelector("#slideView").addEventListener("touchend", (event) => {
   if (distance > 0) previousStep();
 }, { passive: true });
 
-initializeDriveSettings();
-loadSavedDevices();
-updateManageModeButton();
-renderDevices();
-renderDriveImport();
-showView("device");
-updateAppStatus("idle", "待機中");
-autoSyncDriveFolder();
+// initializeDriveSettings();
+// loadSavedDevices();
+// updateManageModeButton();
+// renderDevices();
+// renderDriveImport();
+// showView("device");
+// updateAppStatus("idle", "待機中");
+// autoSyncDriveFolder();
+
+/** Initialize App */
+async function init() {
+  try {
+    initializeDriveSettings();
+    await loadSavedDevices();
+    updateManageModeButton();
+    renderDevices();
+    renderDriveImport();
+    showView("device");
+    updateAppStatus("idle", "待機中");
+    
+    // 遅延させて同期を実行
+    setTimeout(() => {
+      autoSyncDriveFolder();
+    }, 500);
+  } catch (error) {
+    console.error("Initialization error:", error);
+    updateAppStatus("error", "初期化エラー");
+  }
+}
+
+init();
 
 function renderDevices() {
+  if (typeof window.__reactDeviceGridRefresh === "function") {
+    window.__reactDeviceGridRefresh();
+    return;
+  }
+
   const grid = document.querySelector("#deviceGrid");
-  if (!grid) return;
-  const query = searchInput.value.trim().toLowerCase();
+  if (!grid) {
+    // Reactのレンダリング完了を待つために再試行
+    if (!window._renderRetryCount) window._renderRetryCount = 0;
+    if (window._renderRetryCount < 10) {
+      window._renderRetryCount++;
+      setTimeout(renderDevices, 100);
+    }
+    return;
+  }
+  window._renderRetryCount = 0;
+  const searchInput = document.getElementById("searchInput");
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const filteredDevices = devices.filter((device) => device.name.toLowerCase().includes(query));
   grid.innerHTML = "";
 
@@ -191,7 +259,7 @@ function renderDevices() {
     card.querySelector(".open-device-button").addEventListener("click", () => openDevice(device));
     card.querySelector(".edit-device-button")?.addEventListener("click", () => editDevice(device));
     card.querySelector(".delete-device-button")?.addEventListener("click", () => deleteDevice(device.id));
-    deviceGrid.appendChild(card);
+    grid.appendChild(card);
   });
 }
 
@@ -207,7 +275,7 @@ function editDevice(device) {
   window.goToEditView?.(device);
 }
 
-function deleteDevice(deviceId) {
+async function deleteDevice(deviceId) {
   const index = devices.findIndex((device) => device.id === deviceId);
   if (index === -1 || defaultDeviceIds.has(deviceId)) return;
 
@@ -216,7 +284,7 @@ function deleteDevice(deviceId) {
   if (!ok) return;
 
   devices.splice(index, 1);
-  saveDevices();
+  await saveDevices();
   renderDevices();
   if (state.selectedDevice?.id === deviceId) {
     showView("device");
@@ -226,10 +294,16 @@ function deleteDevice(deviceId) {
 async function syncDriveFolder() {
   if (state.driveSyncInProgress) return;
 
-  const folderId = extractDriveFolderId(driveFolderInput.value);
+  const driveFolderInput = document.getElementById("driveFolderInput");
+  const driveStatus = document.getElementById("driveStatus");
+  const syncDriveButton = document.getElementById("syncDriveButton");
+
+  const folderId = extractDriveFolderId(driveFolderInput?.value || "");
   if (!folderId) {
-    driveStatus.textContent = "URLを確認";
-    driveStatus.style.color = "var(--amber)";
+    if (driveStatus) {
+      driveStatus.textContent = "URLを確認";
+      driveStatus.style.color = "var(--amber)";
+    }
     updateAppStatus("warning", "Drive URLを確認");
     return;
   }
@@ -278,6 +352,8 @@ async function syncDriveFolder() {
 }
 
 function updateAppStatus(status, text) {
+  const appStatus = document.getElementById("appStatus");
+  const appStatusText = document.getElementById("appStatusText");
   if (!appStatus || !appStatusText) return;
   appStatus.dataset.status = status;
   appStatusText.textContent = text;
@@ -286,7 +362,9 @@ function updateAppStatus(status, text) {
 function autoSyncDriveFolder() {
   if (state.driveAutoSynced) return;
   if (!config.googleDriveApiKey) return;
-  if (!extractDriveFolderId(driveFolderInput.value)) return;
+  
+  const driveFolderInput = document.getElementById("driveFolderInput");
+  if (!driveFolderInput || !extractDriveFolderId(driveFolderInput.value)) return;
 
   state.driveAutoSynced = true;
   window.setTimeout(() => {
@@ -298,6 +376,10 @@ function renderDriveImport() {
   if (!state.selectedCategory) {
     state.selectedCategory = driveRoot.categories[0] || { id: "", name: "", files: [] };
   }
+
+  const categoryList = document.getElementById("categoryList");
+  const pdfList = document.getElementById("pdfList");
+  if (!categoryList || !pdfList) return;
 
   categoryList.innerHTML = "";
   if (!config.googleDriveApiKey) {
@@ -383,14 +465,27 @@ window.toggleManageMode = toggleManageMode;
 window.renderDevices = renderDevices;
 window.devices = devices;
 window.saveDevices = saveDevices;
+window.autoSyncDriveFolder = autoSyncDriveFolder;
+window.showView = showView;
+window.canManageDevice = (deviceId) => state.manageMode && !defaultDeviceIds.has(deviceId);
+window.openDevice = openDevice;
+window.deleteDeviceById = deleteDevice;
 
 function renderSplitPreview() {
+  const splitPreviewGrid = document.getElementById("splitPreviewGrid");
+  const previewDeviceName = document.getElementById("previewDeviceName");
+  const openPdfButton = document.getElementById("openPdfButton");
+  const autoSplitButton = document.getElementById("autoSplitButton");
+  const registerPreviewButton = document.getElementById("registerPreviewButton");
+
+  if (!splitPreviewGrid) return;
   splitPreviewGrid.innerHTML = "";
+
   if (!state.selectedPdf) {
-    previewDeviceName.textContent = "PDFを選択してください。";
-    openPdfButton.disabled = true;
-    autoSplitButton.disabled = true;
-    registerPreviewButton.disabled = true;
+    if (previewDeviceName) previewDeviceName.textContent = "PDFを選択してください。";
+    if (openPdfButton) openPdfButton.disabled = true;
+    if (autoSplitButton) autoSplitButton.disabled = true;
+    if (registerPreviewButton) registerPreviewButton.disabled = true;
     return;
   }
 
@@ -697,17 +792,30 @@ function loadImage(src) {
 }
 
 function openStepPreview(step) {
-  modalStepImage.src = step.image;
-  modalStepImage.alt = step.title;
-  modalStepTitle.textContent = step.title;
-  modalStepMemo.textContent = step.memo || "工程メモはありません";
-  previewModal.classList.add("is-open");
-  previewModal.setAttribute("aria-hidden", "false");
+  const img = document.getElementById("modalStepImage");
+  const title = document.getElementById("modalStepTitle");
+  const memo = document.getElementById("modalStepMemo");
+  const modal = document.getElementById("previewModal");
+
+  if (img) {
+    img.src = step.image;
+    img.alt = step.title;
+  }
+  if (title) title.textContent = step.title;
+  if (memo) memo.textContent = step.memo || "工程メモはありません";
+  
+  if (modal) {
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+  }
 }
 
 function closeStepPreview() {
-  previewModal.classList.remove("is-open");
-  previewModal.setAttribute("aria-hidden", "true");
+  const modal = document.getElementById("previewModal");
+  if (modal) {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+  }
 }
 
 function openSelectedPdf() {
@@ -727,31 +835,42 @@ async function autoSplitSelectedPdf() {
     return;
   }
 
-  autoSplitButton.disabled = true;
-  registerPreviewButton.disabled = true;
-  autoSplitButton.textContent = "分割中...";
-  splitPreviewGrid.innerHTML = `
-    <div class="setup-note">
-      <strong>PDFを読み込んでいます</strong>
-      <span>PDFの解析を開始しています。しばらくお待ちください。</span>
-    </div>
-  `;
+  const autoSplitBtn = document.getElementById("autoSplitButton");
+  const regBtn = document.getElementById("registerPreviewButton");
+  const splitGrid = document.getElementById("splitPreviewGrid");
+
+  if (autoSplitBtn) {
+    autoSplitBtn.disabled = true;
+    autoSplitBtn.textContent = "分割中...";
+  }
+  if (regBtn) regBtn.disabled = true;
+
+  if (splitGrid) {
+    splitGrid.innerHTML = `
+      <div class="setup-note">
+        <strong>PDFを読み込んでいます</strong>
+        <span>PDFの解析を開始しています。しばらくお待ちください。</span>
+      </div>
+    `;
+  }
 
   try {
     const pdfBytes = await fetchDrivePdfBytes(state.selectedPdf.id);
     const steps = await splitPdfIntoSteps(
       pdfBytes,
       state.selectedPdf.name,
-      splitModeSelect.value,
-      mergeModeSelect.value
+      document.getElementById("splitModeSelect")?.value || "normal",
+      document.getElementById("mergeModeSelect")?.value || "normal"
     );
     state.previewSteps = steps;
     renderSplitPreview();
   } catch (error) {
     showPreviewError(error.message);
   } finally {
-    autoSplitButton.disabled = false;
-    autoSplitButton.textContent = "自動分割";
+    if (autoSplitBtn) {
+      autoSplitBtn.disabled = false;
+      autoSplitBtn.textContent = "自動分割";
+    }
   }
 }
 
@@ -1224,16 +1343,30 @@ function showPreviewError(message) {
   `;
 }
 
-function registerPreviewDevice() {
-  if (!state.selectedPdf || state.previewSteps.length === 0) return;
+async function registerPreviewDevice() {
+  if (!state.selectedPdf) {
+    alert("PDFを選択してください。");
+    return;
+  }
+  if (state.previewSteps.length === 0) {
+    alert("「自動分割」を実行して工程を作成してから追加してください。");
+    return;
+  }
 
+  const btn = document.querySelector("#registerPreviewButton");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "登録中...";
+  }
+
+  const titleInput = document.getElementById("previewDeviceTitleInput");
   const fallbackName = state.selectedPdf.name.replace(/\.pdf$/i, "");
-  const name = previewDeviceTitleInput?.value.trim() || fallbackName;
+  const name = titleInput?.value.trim() || fallbackName;
   const device = {
     id: `drive-${Date.now()}`,
     name,
     sourceType: "Drive PDF",
-    updatedAt: "更新情報なし",
+    updatedAt: new Date().toISOString(),
     drivePath: `Google Drive / ${state.selectedCategory.name}`,
     steps: state.previewSteps.map((step) => ({
       ...step,
@@ -1244,14 +1377,21 @@ function registerPreviewDevice() {
 
   devices.unshift(device);
   try {
-    saveDevices();
+    await saveDevices();
+    updateAppStatus("success", `${name} を登録しました`);
+    renderDevices();
+    openDevice(device);
   } catch (error) {
     devices.shift();
-    showPreviewError(error.message);
-    return;
+    console.error("Registration error:", error);
+    showPreviewError(`登録に失敗しました: ${error.message}`);
+  } finally {
+    const btn = document.querySelector("#registerPreviewButton");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "一覧へ追加";
+    }
   }
-  renderDevices();
-  openDevice(device);
 }
 
 function updatePreviewDeviceTitle(value) {
@@ -1259,26 +1399,84 @@ function updatePreviewDeviceTitle(value) {
   previewDeviceTitleInput.value = value;
 }
 
-function saveDevices() {
+async function saveDevices() {
   const savedDevices = devices.filter((device) => !defaultDeviceIds.has(device.id));
-
   try {
-    localStorage.setItem(SAVED_DEVICES_KEY, JSON.stringify(savedDevices));
-  } catch {
-    throw new Error("保存容量が不足しています。分割数を減らすか、不要な装置を削除してください。");
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+
+    // IndexedDBを同期（全件入れ替え）
+    await new Promise((resolve, reject) => {
+      const req = store.clear();
+      req.onsuccess = resolve;
+      req.onerror = reject;
+    });
+
+    for (const device of savedDevices) {
+      store.add(device);
+    }
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  } catch (e) {
+    console.error("Failed to save devices to IndexedDB", e);
+    // QuotaExceededErrorなどの場合
+    if (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
+      alert("【警告】ストレージ容量がいっぱいです。不要な装置を削除してください。");
+    } else {
+      alert(`保存エラー: ${e.message}`);
+    }
+    throw e;
   }
 }
 
-function loadSavedDevices() {
-  const savedDevices = loadSavedDeviceData();
-  savedDevices.reverse().forEach((device) => {
+async function loadSavedDevices() {
+  // まずIndexedDBから読み込み
+  const dbDevices = await loadFromIndexedDB();
+  
+  // IndexedDBが空でLocalStorageにデータがある場合、移行を行う
+  if (dbDevices.length === 0) {
+    const legacyData = loadFromLocalStorage();
+    if (legacyData.length > 0) {
+      console.log("LocalStorageからIndexedDBへデータを移行します...");
+      legacyData.forEach(d => devices.unshift(d));
+      await saveDevices();
+      return;
+    }
+  }
+
+  dbDevices.reverse().forEach((device) => {
     if (!devices.some((item) => item.id === device.id)) {
       devices.unshift(device);
     }
   });
 }
 
-function loadSavedDeviceData() {
+async function loadFromIndexedDB() {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.getAll();
+    
+    const results = await new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    return (results || [])
+      .map((device) => (isValidSavedDevice(device) ? sanitizeSavedDevice(device) : null))
+      .filter(Boolean);
+  } catch (e) {
+    console.error("IndexedDB Load Error", e);
+    return [];
+  }
+}
+
+function loadFromLocalStorage() {
   try {
     const savedDevices = JSON.parse(localStorage.getItem(SAVED_DEVICES_KEY) || "[]");
     if (!Array.isArray(savedDevices)) return [];
@@ -1395,13 +1593,14 @@ async function importDevices(event) {
       importedCount += 1;
     });
 
-    saveDevices();
+    await saveDevices();
     renderDevices();
     window.alert(`${importedCount}件の装置を読み込みました。`);
   } catch (error) {
     window.alert(error.message || "読み込みに失敗しました。");
   } finally {
-    importDevicesInput.value = "";
+    const input = document.getElementById("importDevicesInput");
+    if (input) input.value = "";
   }
 }
 
@@ -1422,7 +1621,8 @@ function initializeDriveSettings() {
   state.savedCategoryId = savedSettings.selectedCategoryId || "";
   state.savedPdfId = savedSettings.selectedPdfId || "";
 
-  if (driveUrl) {
+  const driveFolderInput = document.getElementById("driveFolderInput");
+  if (driveUrl && driveFolderInput) {
     driveFolderInput.value = driveUrl;
     const folderId = extractDriveFolderId(driveUrl);
     if (folderId) driveRoot.folderId = folderId;
@@ -1440,8 +1640,9 @@ function restoreDriveSelection(categories) {
 }
 
 function saveDriveSettings() {
+  const driveFolderInput = document.getElementById("driveFolderInput");
   const settings = {
-    driveFolderUrl: driveFolderInput.value.trim(),
+    driveFolderUrl: driveFolderInput ? driveFolderInput.value.trim() : "",
     selectedCategoryId: state.selectedCategory?.id || "",
     selectedPdfId: state.selectedPdf?.id || ""
   };
@@ -1602,40 +1803,59 @@ function countDriveFiles() {
   return driveRoot.categories.reduce((total, category) => total + category.files.length, 0);
 }
 
-function showView(name) {
-  state.view = name;
-  Object.entries(views).forEach(([viewName, element]) => {
-    if (element) {
-      element.classList.toggle("is-active", viewName === name);
-    }
-  });
-  const reactRoot = document.querySelector("#react-root");
-  if (reactRoot) {
-    reactRoot.hidden = name === "slide";
-  }
-  window.scrollTo({ top: 0, left: 0 });
-  backButton.style.visibility = (name === "device") ? "hidden" : "visible";
-  fullscreenButton.style.visibility = name === "slide" ? "visible" : "hidden";
-}
+// function showView(name) {
+//   state.view = name;
+//   Object.entries(views).forEach(([viewName, element]) => {
+//     if (element) {
+//       element.classList.toggle("is-active", viewName === name);
+//     }
+//   });
+//   const reactRoot = document.querySelector("#react-root");
+//   if (reactRoot) {
+//     reactRoot.hidden = name === "slide";
+//   }
+//   window.scrollTo({ top: 0, left: 0 });
+//   backButton.style.visibility = (name === "device") ? "hidden" : "visible";
+//   fullscreenButton.style.visibility = name === "slide" ? "visible" : "hidden";
+// }
 
 function renderSlide() {
   const device = state.selectedDevice;
-  const step = device.steps[state.stepIndex];
+  const step = device?.steps[state.stepIndex];
   if (!step) {
     showView("device");
     return;
   }
-  slideDeviceName.textContent = device.name;
-  slideSource.textContent = `${device.sourceType} / ${device.drivePath}`;
-  stepCounter.textContent = `${state.stepIndex + 1} / ${device.steps.length}`;
-  stepImage.src = step.image;
-  stepImage.alt = `${device.name} ${step.title}`;
-  stepTitle.textContent = step.title;
-  stepMemo.textContent = step.memo;
-  stepSlider.max = String(device.steps.length - 1);
-  stepSlider.value = String(state.stepIndex);
-  slideTitleInput.value = step.title;
-  saveSlideTitleButton.disabled = true;
+  
+  const setEl = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  
+  setEl("slideDeviceName", device.name);
+  setEl("slideSource", `${device.sourceType} / ${device.drivePath}`);
+  setEl("stepCounter", `${state.stepIndex + 1} / ${device.steps.length}`);
+  
+  const stepImg = document.getElementById("stepImage");
+  if (stepImg) {
+    stepImg.src = step.image;
+    stepImg.alt = `${device.name} ${step.title}`;
+  }
+  
+  setEl("stepTitle", step.title);
+  setEl("stepMemo", step.memo);
+  
+  const slider = document.getElementById("stepSlider");
+  if (slider) {
+    slider.max = String(device.steps.length - 1);
+    slider.value = String(state.stepIndex);
+  }
+  
+  const titleInput = document.getElementById("slideTitleInput");
+  if (titleInput) titleInput.value = step.title;
+  
+  const saveBtn = document.getElementById("saveSlideTitleButton");
+  if (saveBtn) saveBtn.disabled = true;
 }
 
 function saveCurrentSlideTitle() {
@@ -1643,14 +1863,22 @@ function saveCurrentSlideTitle() {
   const step = device?.steps[state.stepIndex];
   if (!step) return;
 
-  step.title = slideTitleInput.value.trim() || `工程${state.stepIndex + 1}`;
-  stepTitle.textContent = step.title;
-  stepImage.alt = `${device.name} ${step.title}`;
-  saveSlideTitleButton.disabled = true;
+  const titleInput = document.getElementById("slideTitleInput");
+  const stepTitle = document.getElementById("stepTitle");
+  const stepImage = document.getElementById("stepImage");
+  const saveBtn = document.getElementById("saveSlideTitleButton");
+
+  const newTitle = titleInput?.value.trim() || `工程${state.stepIndex + 1}`;
+  step.title = newTitle;
+  
+  if (stepTitle) stepTitle.textContent = step.title;
+  if (stepImage) stepImage.alt = `${device.name} ${step.title}`;
+  if (saveBtn) saveBtn.disabled = true;
 
   if (!defaultDeviceIds.has(device.id)) {
-    saveDevices();
-    renderDevices();
+    saveDevices().then(() => {
+      renderDevices();
+    });
   }
 }
 
@@ -1665,7 +1893,8 @@ function nextStep() {
 function requestStepChange(targetIndex) {
   if (!state.selectedDevice) return;
   if (targetIndex < 0 || targetIndex >= state.selectedDevice.steps.length) {
-    stepSlider.value = String(state.stepIndex);
+    const slider = document.getElementById("stepSlider");
+    if (slider) slider.value = String(state.stepIndex);
     return;
   }
 
@@ -1682,7 +1911,9 @@ function requestStepChange(targetIndex) {
     return;
   }
 
-  stepSlider.value = String(state.stepIndex);
+  const slider = document.getElementById("stepSlider");
+  if (slider) slider.value = String(state.stepIndex);
+
   openCheckModal({
     title: currentStep.title || `工程${state.stepIndex + 1}`,
     checks,

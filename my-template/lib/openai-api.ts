@@ -1,11 +1,17 @@
+import { getApiBase } from "@/lib/api";
+
 export async function createOpenAIResponse(
   input: string,
   options: {
     instructions?: string;
     model?: string;
+    useFastApi?: boolean;
   } = {},
 ) {
-  const response = await fetch("/api/openai/respond", {
+  const useFastApi = options.useFastApi ?? true;
+  const endpoint = useFastApi ? `${getApiBase()}/openai/respond` : "/api/openai/respond";
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +26,11 @@ export async function createOpenAIResponse(
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(result.error || "OpenAI API request failed.");
+    const message =
+      typeof result.detail === "string"
+        ? result.detail
+        : result.error || "OpenAI API request failed.";
+    throw new Error(message);
   }
 
   return result as {

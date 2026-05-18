@@ -8,6 +8,7 @@ import { queryDb } from "./db.mjs";
 const port = Number(process.argv[2] || process.env.PORT || 8099);
 const host = process.env.HOST || "127.0.0.1";
 const root = process.cwd();
+const distRoot = join(root, "dist");
 const maxJsonBodyBytes = 1_000_000;
 
 loadLocalEnv();
@@ -41,9 +42,10 @@ createServer(async (request, response) => {
     }
 
     const pathname = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
-    const filePath = normalize(join(root, pathname));
+    const staticRoot = getStaticRoot(pathname);
+    const filePath = normalize(join(staticRoot, pathname));
 
-    if (!filePath.startsWith(root)) {
+    if (!filePath.startsWith(staticRoot)) {
       response.writeHead(403);
       response.end("Forbidden");
       return;
@@ -63,6 +65,14 @@ createServer(async (request, response) => {
   console.log(`AC-BUILDE: http://${host}:${port}`);
   console.log(`Root: ${root}`);
 });
+
+function getStaticRoot(pathname) {
+  const hasBuild = existsSync(join(distRoot, "index.html"));
+  if (hasBuild && (pathname === "/index.html" || pathname.startsWith("/assets/"))) {
+    return distRoot;
+  }
+  return root;
+}
 
 function loadLocalEnv() {
   const envPath = join(root, ".env");

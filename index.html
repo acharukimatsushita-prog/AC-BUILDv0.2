@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AC-BUILD</title>
+  <script>
+    if (location.protocol === "file:" && !location.pathname.replaceAll("\\", "/").includes("/dist/")) {
+      location.replace(new URL("dist/index.html", location.href));
+    }
+  </script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -31,16 +36,15 @@
         </button>
       </div>
     </header>
-  <div id="react-root"></div>
-  <noscript>
-    <div style="padding:16px;font-family:Meiryo,sans-serif;background:#fff3cd;color:#5f4300;">
-      JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。
-    </div>
-  </noscript>
+
+    <div id="react-root"></div>
+    <noscript>
+      <div style="padding:16px;font-family:Meiryo,sans-serif;background:#fff3cd;color:#5f4300;">
+        JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。
+      </div>
+    </noscript>
 
     <main>
-
-
       <section class="view" id="slideView" aria-labelledby="slideDeviceName">
         <div class="slide-head">
           <div>

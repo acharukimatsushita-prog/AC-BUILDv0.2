@@ -2,7 +2,8 @@
 .env
 dist
 node_modules
-my-app
+my-template/node_modules
+backend/__pycache__
 *.log
 Dockerfile
 docker-compose.yml

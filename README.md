@@ -2,6 +2,10 @@
 
 組立作業標準をAndroidタブレットで閲覧するための試作Webアプリです。
 
+## テンプレート（my-template）
+
+新規プロジェクト用の参照実装は `my-template/` にあります（Next.js / shadcn / OpenAI API / PostgreSQL）。詳細は [my-template/TEMPLATE.md](my-template/TEMPLATE.md) を参照してください。
+
 ## 目的
 
 - Google Driveに置いたExcel/PDFを元データとして管理する

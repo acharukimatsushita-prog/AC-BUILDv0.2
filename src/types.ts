@@ -26,4 +26,8 @@ export type LegacyWindow = Window & {
   saveDevices?: () => void;
   renderDevices?: () => void;
   goToEditView?: (device: Device) => void;
+  __reactDeviceGridRefresh?: () => void;
+  canManageDevice?: (deviceId: string) => boolean;
+  openDevice?: (device: Device) => void;
+  deleteDeviceById?: (deviceId: string) => void | Promise<void>;
 };

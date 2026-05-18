@@ -2,13 +2,20 @@
   "name": "ac-builde",
   "version": "0.2.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "api": "node server.mjs",
     "typecheck": "tsc --noEmit",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "stack:dev": "npm --prefix my-template run dev",
+    "stack:build": "npm --prefix my-template run build",
+    "stack:up": "docker compose up --build",
+    "stack:down": "docker compose down"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
