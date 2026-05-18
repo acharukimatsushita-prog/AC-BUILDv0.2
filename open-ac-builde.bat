@@ -3,19 +3,16 @@ cd /d "%~dp0"
 title AC-BUILDE
 
 echo Opening AC-BUILDE...
-set "APP_FILE=%~dp0index.html"
-set "EDGE=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
-
-if exist "%EDGE%" (
-  start "" "%EDGE%" "%APP_FILE%"
-) else if exist "%CHROME%" (
-  start "" "%CHROME%" "%APP_FILE%"
-) else (
-  start "" "%APP_FILE%"
+set "NODE_EXE=C:\Program Files\nodejs\node.exe"
+if not exist "%NODE_EXE%" (
+  echo Node.js was not found: %NODE_EXE%
+  echo Please install Node.js or check the path.
+  pause
+  exit /b 1
 )
+"%NODE_EXE%" launch-ac-builde.mjs
 
 echo.
-echo If the browser does not open, double-click index.html.
+echo If the browser does not open, go to http://127.0.0.1:8099
 echo.
 pause
