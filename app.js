@@ -13,6 +13,8 @@ const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
 const DB_NAME = "AC_BUILDE_DB";
 const DB_VERSION = 1;
 const STORE_NAME = "devices";
+const STEP_IMAGE_MAX_SIZE = 1600;
+const STEP_IMAGE_QUALITY = 0.86;
 
 const config = window.AC_BUILDE_CONFIG || {};
 const ja = (value) => value;
@@ -53,7 +55,7 @@ function getView(name) {
 
 function showView(name) {
   state.view = name;
-  ["device", "slide", "drive", "browser"].forEach((viewName) => {
+  ["device", "slide", "drive"].forEach((viewName) => {
     const el = getView(viewName);
     if (el) {
       el.classList.toggle("is-active", viewName === name);
@@ -123,7 +125,6 @@ function attachListeners() {
   safeAddListener("manageModeButton", "click", toggleManageMode);
   safeAddListener("syncDriveButton", "click", syncDriveFolder);
   safeAddListener("registerPreviewButton", "click", registerPreviewDevice);
-  safeAddListener("openPdfButton", "click", openSelectedPdf);
   safeAddListener("autoSplitButton", "click", autoSplitSelectedPdf);
   safeAddListener("previewModalBackdrop", "click", closeStepPreview);
   safeAddListener("closePreviewModal", "click", closeStepPreview);
@@ -474,7 +475,6 @@ window.deleteDeviceById = deleteDevice;
 function renderSplitPreview() {
   const splitPreviewGrid = document.getElementById("splitPreviewGrid");
   const previewDeviceName = document.getElementById("previewDeviceName");
-  const openPdfButton = document.getElementById("openPdfButton");
   const autoSplitButton = document.getElementById("autoSplitButton");
   const registerPreviewButton = document.getElementById("registerPreviewButton");
 
@@ -483,14 +483,12 @@ function renderSplitPreview() {
 
   if (!state.selectedPdf) {
     if (previewDeviceName) previewDeviceName.textContent = "PDFを選択してください。";
-    if (openPdfButton) openPdfButton.disabled = true;
     if (autoSplitButton) autoSplitButton.disabled = true;
     if (registerPreviewButton) registerPreviewButton.disabled = true;
     return;
   }
 
   previewDeviceName.textContent = `${state.selectedCategory.name} / ${state.selectedPdf.name}`;
-  openPdfButton.disabled = !state.selectedPdf.webViewLink;
   autoSplitButton.disabled = false;
   registerPreviewButton.disabled = state.previewSteps.length === 0;
   if (state.previewSteps.length === 0) {
@@ -815,15 +813,6 @@ function closeStepPreview() {
   if (modal) {
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
-  }
-}
-
-function openSelectedPdf() {
-  if (!state.selectedPdf?.webViewLink) return;
-  if (typeof window.openInAppBrowser === "function") {
-    window.openInAppBrowser(state.selectedPdf.webViewLink);
-  } else {
-    window.open(state.selectedPdf.webViewLink, "_blank", "noopener");
   }
 }
 

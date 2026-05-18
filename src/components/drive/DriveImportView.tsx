@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { FileText, Folder, FolderSync, Globe, Layers, ListChecks, Sparkles } from "lucide-react";
+import { FileText, Folder, FolderSync, Layers, ListChecks, Sparkles } from "lucide-react";
 
 export function DriveImportView({ isActive }: { isActive: boolean }) {
   return (
@@ -121,11 +121,7 @@ export function DriveImportView({ isActive }: { isActive: boolean }) {
                   </label>
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <Button id="openPdfButton" type="button" variant="outline">
-                  <Globe className="size-4" aria-hidden="true" />
-                  ブラウザで開く
-                </Button>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button id="autoSplitButton" type="button" size="lg">
                   <Sparkles className="size-4" aria-hidden="true" />
                   自動分割

@@ -1,20 +1,18 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
-import { ExternalLink, FolderSync, Globe, Import, RefreshCw, Search, Settings, Upload } from "lucide-react";
+import { FolderSync, Import, Search, Settings, Upload } from "lucide-react";
 import { DeviceEditView } from "@/components/DeviceEditView";
 import { DeviceGrid } from "@/components/device/DeviceGrid";
 import { DriveImportView } from "@/components/drive/DriveImportView";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import type { Device, LegacyWindow } from "@/types";
 import "./styles.css";
 
 function AppTopScreen() {
-  const [activeView, setActiveView] = React.useState<"device" | "drive" | "edit" | "browser">("device");
+  const [activeView, setActiveView] = React.useState<"device" | "drive" | "edit">("device");
   const [editingDevice, setEditingDevice] = React.useState<Device | null>(null);
-  const [browserUrl, setBrowserUrl] = React.useState<string>("https://www.google.com");
 
   React.useEffect(() => {
     const backBtn = document.getElementById("backButton");
@@ -26,14 +24,6 @@ function AppTopScreen() {
       }
     };
     backBtn?.addEventListener("click", handleBack);
-
-    (window as any).openInAppBrowser = (url: string) => {
-      let targetUrl = url;
-      if (targetUrl.includes("drive.google.com") && targetUrl.includes("/view")) {
-        targetUrl = targetUrl.replace("/view", "/preview");
-      }
-      goToView("browser", targetUrl);
-    };
 
     (window as any).goToEditView = (device: Device) => {
       setEditingDevice(device);
@@ -53,10 +43,9 @@ function AppTopScreen() {
     };
   }, [activeView]);
 
-  function goToView(name: "device" | "drive" | "browser", url?: string) {
+  function goToView(name: "device" | "drive") {
     setActiveView(name);
     setEditingDevice(null);
-    if (url) setBrowserUrl(url);
     if (typeof (window as any).showView === "function") {
       (window as any).showView(name);
     } else {
@@ -110,10 +99,6 @@ function AppTopScreen() {
                   <Settings className="size-4" aria-hidden="true" />
                   管理者画面
                 </Button>
-                <Button id="openBrowserButton" type="button" variant="outline" onClick={() => goToView("browser")}>
-                  <Globe className="size-4" aria-hidden="true" />
-                  ブラウザ
-                </Button>
                 <Button id="openDriveButton" type="button" onClick={() => goToView("drive")}>
                   <FolderSync className="size-4" aria-hidden="true" />
                   Drive同期
@@ -139,85 +124,10 @@ function AppTopScreen() {
       </main>
 
       <DriveImportView isActive={activeView === "drive"} />
-      <SimpleBrowserView isActive={activeView === "browser"} url={browserUrl} setUrl={setBrowserUrl} />
       {activeView === "edit" && editingDevice && (
         <DeviceEditView device={editingDevice} onCancel={() => goToView("device")} onSave={saveEditedDevice} />
       )}
     </div>
-  );
-}
-
-function SimpleBrowserView({ isActive, url, setUrl }: { isActive: boolean; url: string; setUrl: (url: string) => void }) {
-  const [inputUrl, setInputUrl] = React.useState(url);
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
-
-  React.useEffect(() => {
-    setInputUrl(url);
-  }, [url]);
-
-  const handleGo = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    let target = inputUrl.trim();
-    if (target && !target.startsWith("http")) {
-      target = `https://${target}`;
-    }
-    setUrl(target);
-  };
-
-  const handleRefresh = () => {
-    if (iframeRef.current) {
-      const currentSrc = iframeRef.current.src;
-      iframeRef.current.src = "";
-      setTimeout(() => {
-        if (iframeRef.current) iframeRef.current.src = currentSrc;
-      }, 10);
-    }
-  };
-
-  return (
-    <main className={isActive ? "flex h-[calc(100vh-64px)] flex-col bg-white" : "hidden"}>
-      <section className={isActive ? "view is-active flex h-full flex-col" : "view"} id="browserView">
-        <div className="flex items-center gap-2 border-b border-[#c8d4e0] bg-[#f0f4f8] p-2 sm:p-3">
-          <form onSubmit={handleGo} className="flex flex-1 items-center gap-2">
-            <Input
-              value={inputUrl}
-              onChange={(e) => setInputUrl(e.target.value)}
-              className="h-10 flex-1 rounded-md border-[#c8d4e0] bg-white text-sm"
-              placeholder="https://..."
-            />
-            <Button type="submit" size="sm" className="h-10 px-4">
-              Go
-            </Button>
-          </form>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleRefresh} title="更新">
-              <RefreshCw className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => window.open(url, "_blank")}
-              title="新規タブで開く"
-            >
-              <ExternalLink className="size-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="relative flex-1 bg-slate-100">
-          <iframe
-            ref={iframeRef}
-            src={url}
-            className="h-full w-full border-none"
-            title="Simple Browser"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-          />
-          <div className="absolute bottom-4 right-4 max-w-xs rounded-md bg-black/60 p-2 text-[10px] text-white backdrop-blur-sm">
-            ※X-Frame-Options制限により表示できないサイトがあります。その場合は右上のアイコンから別タブで開いてください。
-          </div>
-        </div>
-      </section>
-    </main>
   );
 }
 
