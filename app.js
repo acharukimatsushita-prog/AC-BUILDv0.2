@@ -13,6 +13,8 @@ const SAVED_DEVICES_KEY = "ac-builde-saved-devices";
 const DB_NAME = "AC_BUILDE_DB";
 const DB_VERSION = 1;
 const STORE_NAME = "devices";
+const STEP_IMAGE_MAX_SIZE = 1600;
+const STEP_IMAGE_QUALITY = 0.86;
 
 const config = window.AC_BUILDE_CONFIG || {};
 const ja = (value) => value;
