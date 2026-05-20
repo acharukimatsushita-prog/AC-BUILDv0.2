@@ -52,11 +52,6 @@ button:active {
   min-height: 100vh;
 }
 
-.app-shell > main > #deviceView,
-.app-shell > main > #driveView {
-  display: none !important;
-}
-
 .topbar {
   position: sticky;
   top: 0;

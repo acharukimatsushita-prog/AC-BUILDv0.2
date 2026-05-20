@@ -58,13 +58,13 @@ function showView(name) {
   ["device", "slide", "drive"].forEach((viewName) => {
     const el = getView(viewName);
     if (el) {
-      el.classList.toggle("is-active", viewName === name);
+      const isActive = viewName === name;
+      el.classList.toggle("is-active", isActive);
+      if (el.parentElement?.tagName === "MAIN") {
+        el.parentElement.hidden = !isActive;
+      }
     }
   });
-  const reactRoot = document.getElementById("react-root");
-  if (reactRoot) {
-    reactRoot.hidden = name === "slide";
-  }
   window.scrollTo({ top: 0, left: 0 });
   
   const backBtn = document.getElementById("backButton");
@@ -341,7 +341,7 @@ async function syncDriveFolder() {
     updateAppStatus("error", "Drive同期失敗");
     splitPreviewGrid.innerHTML = `
       <div class="error-text">
-        <strong>蜷梧悄繧ｨ繝ｩ繝ｼ</strong>
+        <strong>同期エラー</strong>
         <span>${escapeHtml(error.message)}</span>
       </div>
     `;
@@ -434,7 +434,7 @@ function renderDriveImport() {
     button.classList.toggle("is-selected", state.selectedPdf?.id === file.id);
     button.innerHTML = `
       ${file.name}
-      <small>${file.pages}繝壹・繧ｸ / ${file.modifiedTime}</small>
+      <small>${file.pages}ページ / ${file.modifiedTime}</small>
     `;
     button.addEventListener("click", () => selectDrivePdf(file));
     pdfList.appendChild(button);
@@ -1772,7 +1772,7 @@ function getDriveItemTargetId(item) {
 }
 
 function formatDriveDate(value) {
-  if (!value) return "譖ｴ譁ｰ譌･荳肴・";
+  if (!value) return "更新日不明";
   return new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
     month: "2-digit",
