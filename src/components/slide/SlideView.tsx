@@ -1,9 +1,12 @@
+import { Minimize2 } from "lucide-react";
+
 export function SlideView() {
   return (
     <main id="slideMain" hidden>
       <section className="view" id="slideView" aria-labelledby="slideDeviceName">
         <button className="fullscreen-exit-button" id="exitFullscreenButton" type="button" aria-label="全画面を解除">
-          全画面解除
+          <Minimize2 className="fullscreen-exit-icon" aria-hidden="true" />
+          <span>全画面解除</span>
         </button>
 
         <div className="slide-head">
