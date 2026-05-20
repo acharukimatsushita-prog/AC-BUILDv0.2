@@ -129,6 +129,7 @@ function attachListeners() {
   safeAddListener("previewModalBackdrop", "click", closeStepPreview);
   safeAddListener("closePreviewModal", "click", closeStepPreview);
   safeAddListener("fullscreenButton", "click", toggleFullscreen);
+  safeAddListener("exitFullscreenButton", "click", exitFullscreen);
   safeAddListener("saveSlideTitleButton", "click", saveCurrentSlideTitle);
   
   const slideTitleInput = document.getElementById("slideTitleInput");
@@ -1926,7 +1927,16 @@ function toggleFullscreen() {
     requestElementFullscreen(target);
     return;
   }
-  document.exitFullscreen?.();
+  exitFullscreen();
+}
+
+function exitFullscreen() {
+  const exit =
+    document.exitFullscreen
+    || document.webkitExitFullscreen
+    || document.msExitFullscreen;
+
+  exit?.call(document);
 }
 
 function requestElementFullscreen(element) {

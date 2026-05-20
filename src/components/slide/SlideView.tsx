@@ -2,6 +2,10 @@ export function SlideView() {
   return (
     <main id="slideMain" hidden>
       <section className="view" id="slideView" aria-labelledby="slideDeviceName">
+        <button className="fullscreen-exit-button" id="exitFullscreenButton" type="button" aria-label="全画面を解除">
+          全画面解除
+        </button>
+
         <div className="slide-head">
           <div>
             <p className="eyebrow" id="slideSource" />
