@@ -485,34 +485,43 @@ h2 {
   padding: 8px 10px;
 }
 
-:fullscreen main {
+#slideMain:fullscreen,
+:fullscreen #slideMain {
   padding: 10px 14px;
+  overflow: hidden;
+  background: #f0f4f8;
 }
 
+#slideMain:fullscreen #slideView.is-active,
 :fullscreen #slideView.is-active {
   min-height: calc(100vh - 20px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
+#slideMain:fullscreen .slide-head,
 :fullscreen .slide-head {
   margin-bottom: 8px;
 }
 
+#slideMain:fullscreen .slide-head h2,
 :fullscreen .slide-head h2 {
   margin-bottom: 2px;
   font-size: clamp(20px, 2vw, 28px);
 }
 
+#slideMain:fullscreen .step-counter,
 :fullscreen .step-counter {
   padding: 7px 10px;
 }
 
+#slideMain:fullscreen .slide-stage,
 :fullscreen .slide-stage {
   min-height: 0;
   align-items: stretch;
 }
 
+#slideMain:fullscreen .step-card,
 :fullscreen .step-card {
   width: min(100%, 1520px);
   height: 100%;
@@ -520,6 +529,7 @@ h2 {
   grid-template-rows: minmax(0, 1fr) auto;
 }
 
+#slideMain:fullscreen .step-card img,
 :fullscreen .step-card img {
   width: 100%;
   height: 100%;
@@ -529,14 +539,17 @@ h2 {
   image-rendering: auto;
 }
 
+#slideMain:fullscreen .step-card figcaption,
 :fullscreen .step-card figcaption {
   padding: 9px 12px;
 }
 
+#slideMain:fullscreen .bottom-controls,
 :fullscreen .bottom-controls {
   margin-top: 8px;
 }
 
+#slideMain:fullscreen .bottom-controls button,
 :fullscreen .bottom-controls button {
   min-height: 36px;
 }

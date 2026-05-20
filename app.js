@@ -1920,10 +1920,30 @@ function applyStepChange(targetIndex) {
 
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen?.();
+    const target = document.getElementById("slideMain")
+      || document.getElementById("slideView")
+      || document.documentElement;
+    requestElementFullscreen(target);
     return;
   }
   document.exitFullscreen?.();
+}
+
+function requestElementFullscreen(element) {
+  const request =
+    element.requestFullscreen
+    || element.webkitRequestFullscreen
+    || element.msRequestFullscreen;
+
+  if (!request) {
+    console.warn("Fullscreen API is not available in this browser.");
+    return;
+  }
+
+  const result = request.call(element);
+  if (result?.catch) {
+    result.catch((error) => console.warn("Fullscreen request failed.", error));
+  }
 }
 
 function makeStepSvg(number, title, detail) {

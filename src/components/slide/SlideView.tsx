@@ -1,6 +1,6 @@
 export function SlideView() {
   return (
-    <main>
+    <main id="slideMain" hidden>
       <section className="view" id="slideView" aria-labelledby="slideDeviceName">
         <div className="slide-head">
           <div>
